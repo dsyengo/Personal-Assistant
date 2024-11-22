@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "wellness-assistant",
-    "slug": "wellness-assistant",
+    "name": "SmartAfya",
+    "slug": "SmartAfya",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,8 +14,9 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "backgroundColor": "#4A90E2"
+      },
+       "package": "com.smartafya.app"
     },
     "web": {
       "bundler": "metro",
@@ -39,3 +40,4 @@
     }
   }
 }
+
