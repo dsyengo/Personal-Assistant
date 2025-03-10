@@ -5,21 +5,36 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Dimensions,
+  StatusBar,
 } from "react-native";
 import React from "react";
 import { Stack } from "expo-router";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
+import { LinearGradient } from "expo-linear-gradient";
+
+const { width, height } = Dimensions.get("window");
 
 const HomePage = () => {
   return (
     <>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
       <Stack.Screen
         options={{
           headerTransparent: true,
           headerTitle: "",
+          headerShadowVisible: false,
           headerLeft: () => (
-            <TouchableOpacity onPress={() => {}} style={styles.iconLeft}>
+            <TouchableOpacity
+              onPress={() => {}}
+              style={styles.iconLeft}
+              activeOpacity={0.7}
+            >
               <Image
                 style={styles.imageTop}
                 source={{
@@ -29,7 +44,11 @@ const HomePage = () => {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity onPress={() => {}} style={styles.iconRight}>
+            <TouchableOpacity
+              onPress={() => {}}
+              style={styles.iconRight}
+              activeOpacity={0.7}
+            >
               <Ionicons
                 name="notifications"
                 size={20}
@@ -40,143 +59,347 @@ const HomePage = () => {
         }}
       />
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <LinearGradient
+        colors={["#f8f9fa", "#ffffff"]}
+        style={styles.gradientBackground}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 0.3 }}
+      />
+
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.headerSpacer} />
 
-        {/* Welcome Section */}
-        <Text style={styles.welcomeText}>Good Morning, Alex!</Text>
-        <Text style={styles.subtitle}>
-          Your personalized health insights at a glance
-        </Text>
+        {/* Welcome Section with Animation Indicator */}
+        <View style={styles.welcomeContainer}>
+          <View>
+            <Text style={styles.welcomeText}>Good Morning, Alex!</Text>
+            <Text style={styles.subtitle}>
+              Your personalized health insights at a glance
+            </Text>
+          </View>
+          <LinearGradient
+            colors={[Colors.light.primaryButton, "#4db6ac"]}
+            style={styles.pulseContainer}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <FontAwesome5 name="heartbeat" size={18} color="white" />
+          </LinearGradient>
+        </View>
 
         {/* Health Stats Cards */}
         <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Ionicons
-              name="footsteps"
-              size={24}
-              color={Colors.light.primaryButton}
-            />
+          <LinearGradient
+            colors={["#ffffff", "#f8f9fa"]}
+            style={styles.statCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+          >
+            <View style={styles.iconCircle}>
+              <Ionicons
+                name="footsteps"
+                size={22}
+                color={Colors.light.primaryButton}
+              />
+            </View>
             <Text style={styles.statValue}>8,000</Text>
             <Text style={styles.statLabel}>Steps</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Ionicons name="flame" size={24} color={Colors.light.warning} />
+          </LinearGradient>
+
+          <LinearGradient
+            colors={["#ffffff", "#f8f9fa"]}
+            style={styles.statCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+          >
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: "rgba(255, 152, 0, 0.1)" },
+              ]}
+            >
+              <Ionicons name="flame" size={22} color={Colors.light.warning} />
+            </View>
             <Text style={styles.statValue}>1,500</Text>
             <Text style={styles.statLabel}>Calories</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Ionicons
-              name="water"
-              size={24}
-              color={Colors.light.primaryButton}
-            />
+          </LinearGradient>
+
+          <LinearGradient
+            colors={["#ffffff", "#f8f9fa"]}
+            style={styles.statCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+          >
+            <View style={styles.iconCircle}>
+              <Ionicons
+                name="water"
+                size={22}
+                color={Colors.light.primaryButton}
+              />
+            </View>
             <Text style={styles.statValue}>6/8</Text>
             <Text style={styles.statLabel}>Water</Text>
-          </View>
+          </LinearGradient>
         </View>
 
         {/* Quick-Access Feature Buttons */}
         <View style={styles.featureContainer}>
-          <TouchableOpacity style={styles.featureBox}>
-            <Ionicons
-              name="barbell"
-              size={30}
-              color={Colors.light.primaryButton}
-            />
+          <TouchableOpacity style={styles.featureBox} activeOpacity={0.8}>
+            <LinearGradient
+              colors={[Colors.light.primaryButton, "#4db6ac"]}
+              style={styles.featureIconContainer}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="barbell" size={24} color="white" />
+            </LinearGradient>
             <Text style={styles.featureText}>Track Fitness</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.featureBox}>
-            <MaterialIcons
-              name="fastfood"
-              size={30}
-              color={Colors.light.secondaryButton}
-            />
+
+          <TouchableOpacity style={styles.featureBox} activeOpacity={0.8}>
+            <LinearGradient
+              colors={[Colors.light.secondaryButton, "#ff8a65"]}
+              style={styles.featureIconContainer}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <MaterialIcons name="fastfood" size={24} color="white" />
+            </LinearGradient>
             <Text style={styles.featureText}>Log Meals</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.featureBox}>
-            <Ionicons name="heart" size={30} color={Colors.light.warning} />
+
+          <TouchableOpacity style={styles.featureBox} activeOpacity={0.8}>
+            <LinearGradient
+              colors={[Colors.light.warning, "#ffa726"]}
+              style={styles.featureIconContainer}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="heart" size={24} color="white" />
+            </LinearGradient>
             <Text style={styles.featureText}>Health Alerts</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.featureBox}>
-            <Ionicons name="chatbubbles" size={30} color={Colors.light.icon} />
+
+          <TouchableOpacity style={styles.featureBox} activeOpacity={0.8}>
+            <LinearGradient
+              colors={[Colors.light.icon, "#9575cd"]}
+              style={styles.featureIconContainer}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="chatbubbles" size={24} color="white" />
+            </LinearGradient>
             <Text style={styles.featureText}>AI Chatbot</Text>
           </TouchableOpacity>
         </View>
 
         {/* Today's Goal Progress */}
-        <View style={styles.goalContainer}>
-          <Text style={styles.sectionTitle}>Today's Goals</Text>
-          <View style={styles.goalProgressBar}>
-            <View style={[styles.progressFill, { width: "75%" }]} />
+        <View style={styles.cardContainer}>
+          <View style={styles.goalHeader}>
+            <Text style={styles.sectionTitle}>Today's Goals</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.goalText}>75% of daily goals completed</Text>
+
+          <View style={styles.goalProgressContainer}>
+            <View style={styles.goalProgressBar}>
+              <LinearGradient
+                colors={[Colors.light.primaryButton, "#4db6ac"]}
+                style={[styles.progressFill, { width: "75%" }]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              />
+            </View>
+            <Text style={styles.goalText}>75% of daily goals completed</Text>
+          </View>
+
+          <View style={styles.goalDetailsContainer}>
+            <View style={styles.goalDetailItem}>
+              <View
+                style={[
+                  styles.miniCircle,
+                  { backgroundColor: Colors.light.primaryButton },
+                ]}
+              />
+              <Text style={styles.goalDetailText}>8,000 / 10,000 steps</Text>
+            </View>
+            <View style={styles.goalDetailItem}>
+              <View
+                style={[
+                  styles.miniCircle,
+                  { backgroundColor: Colors.light.warning },
+                ]}
+              />
+              <Text style={styles.goalDetailText}>1,500 / 2,000 calories</Text>
+            </View>
+            <View style={styles.goalDetailItem}>
+              <View
+                style={[
+                  styles.miniCircle,
+                  { backgroundColor: Colors.light.secondaryButton },
+                ]}
+              />
+              <Text style={styles.goalDetailText}>6 / 8 glasses of water</Text>
+            </View>
+          </View>
         </View>
 
         {/* Health Insights */}
-        <View style={styles.insightContainer}>
-          <Text style={styles.sectionTitle}>Health Insights</Text>
-          <View style={styles.insightCard}>
-            <Ionicons
-              name="water"
-              size={24}
-              color={Colors.light.primaryButton}
-            />
-            <Text style={styles.insightText}>
-              Drink 2 more glasses of water
-            </Text>
+        <View style={styles.cardContainer}>
+          <View style={styles.goalHeader}>
+            <Text style={styles.sectionTitle}>Health Insights</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAllText}>More</Text>
+            </TouchableOpacity>
           </View>
+
           <View style={styles.insightCard}>
-            <Ionicons name="time" size={24} color={Colors.light.warning} />
-            <Text style={styles.insightText}>
-              Time to stretch! Been sitting for 1 hour
-            </Text>
+            <View
+              style={[
+                styles.insightIconCircle,
+                { backgroundColor: "rgba(38, 198, 218, 0.1)" },
+              ]}
+            >
+              <Ionicons
+                name="water"
+                size={20}
+                color={Colors.light.primaryButton}
+              />
+            </View>
+            <View style={styles.insightTextContainer}>
+              <Text style={styles.insightText}>
+                Drink 2 more glasses of water
+              </Text>
+              <Text style={styles.insightTime}>15 minutes ago</Text>
+            </View>
           </View>
+
           <View style={styles.insightCard}>
-            <Ionicons
-              name="nutrition"
-              size={24}
-              color={Colors.light.secondaryButton}
-            />
-            <Text style={styles.insightText}>
-              Increase protein intake for recovery
-            </Text>
+            <View
+              style={[
+                styles.insightIconCircle,
+                { backgroundColor: "rgba(255, 152, 0, 0.1)" },
+              ]}
+            >
+              <Ionicons name="time" size={20} color={Colors.light.warning} />
+            </View>
+            <View style={styles.insightTextContainer}>
+              <Text style={styles.insightText}>
+                Time to stretch! Been sitting for 1 hour
+              </Text>
+              <Text style={styles.insightTime}>30 minutes ago</Text>
+            </View>
+          </View>
+
+          <View style={[styles.insightCard, { borderBottomWidth: 0 }]}>
+            <View
+              style={[
+                styles.insightIconCircle,
+                { backgroundColor: "rgba(255, 87, 34, 0.1)" },
+              ]}
+            >
+              <Ionicons
+                name="nutrition"
+                size={20}
+                color={Colors.light.secondaryButton}
+              />
+            </View>
+            <View style={styles.insightTextContainer}>
+              <Text style={styles.insightText}>
+                Increase protein intake for recovery
+              </Text>
+              <Text style={styles.insightTime}>2 hours ago</Text>
+            </View>
           </View>
         </View>
 
         {/* Weekly Summary */}
-        <View style={styles.summaryContainer}>
+        <View style={styles.cardContainer}>
           <Text style={styles.sectionTitle}>Weekly Summary</Text>
-          <View style={styles.summaryStats}>
-            <View style={styles.summaryItem}>
+          <View style={styles.summaryStatsContainer}>
+            <LinearGradient
+              colors={["#ffffff", "#f8f9fa"]}
+              style={styles.summaryItem}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+            >
               <Text style={styles.summaryValue}>50,000</Text>
               <Text style={styles.summaryLabel}>Total Steps</Text>
-            </View>
-            <View style={styles.summaryItem}>
+              <View style={styles.summaryTrend}>
+                <Ionicons name="arrow-up" size={14} color="#4CAF50" />
+                <Text style={[styles.trendText, { color: "#4CAF50" }]}>
+                  12%
+                </Text>
+              </View>
+            </LinearGradient>
+
+            <LinearGradient
+              colors={["#ffffff", "#f8f9fa"]}
+              style={styles.summaryItem}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+            >
               <Text style={styles.summaryValue}>3,500</Text>
               <Text style={styles.summaryLabel}>Calories Burned</Text>
-            </View>
+              <View style={styles.summaryTrend}>
+                <Ionicons name="arrow-up" size={14} color="#4CAF50" />
+                <Text style={[styles.trendText, { color: "#4CAF50" }]}>8%</Text>
+              </View>
+            </LinearGradient>
           </View>
         </View>
 
         {/* Upcoming Activity */}
-        <View style={styles.upcomingContainer}>
-          <Text style={styles.sectionTitle}>Upcoming</Text>
-          <TouchableOpacity style={styles.upcomingCard}>
-            <Ionicons
-              name="fitness"
-              size={24}
-              color={Colors.light.primaryButton}
-            />
+        <View style={styles.cardContainer}>
+          <View style={styles.goalHeader}>
+            <Text style={styles.sectionTitle}>Upcoming</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAllText}>View Calendar</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.upcomingCard} activeOpacity={0.7}>
+            <LinearGradient
+              colors={[Colors.light.primaryButton, "#4db6ac"]}
+              style={styles.upcomingIconContainer}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="fitness" size={20} color="white" />
+            </LinearGradient>
+
             <View style={styles.upcomingInfo}>
               <Text style={styles.upcomingTitle}>Morning Workout</Text>
               <Text style={styles.upcomingTime}>Tomorrow, 7:00 AM</Text>
             </View>
-            <Ionicons
-              name="chevron-forward"
-              size={24}
-              color={Colors.light.text}
-            />
+
+            <TouchableOpacity style={styles.upcomingActionButton}>
+              <Text style={styles.upcomingActionText}>Set Reminder</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.upcomingCard} activeOpacity={0.7}>
+            <LinearGradient
+              colors={[Colors.light.secondaryButton, "#ff8a65"]}
+              style={styles.upcomingIconContainer}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <MaterialIcons name="monitor-weight" size={20} color="white" />
+            </LinearGradient>
+
+            <View style={styles.upcomingInfo}>
+              <Text style={styles.upcomingTitle}>Weekly Weigh-in</Text>
+              <Text style={styles.upcomingTime}>Friday, 8:00 AM</Text>
+            </View>
+
+            <TouchableOpacity style={styles.upcomingActionButton}>
+              <Text style={styles.upcomingActionText}>Set Reminder</Text>
+            </TouchableOpacity>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -187,16 +410,37 @@ const HomePage = () => {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    backgroundColor: Colors.light.background,
     paddingBottom: 30,
+  },
+  gradientBackground: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    height: height,
   },
   headerSpacer: {
     height: 100,
   },
+  welcomeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  pulseContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   imageTop: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#ffffff",
   },
   iconLeft: {
     marginLeft: 20,
@@ -205,14 +449,15 @@ const styles = StyleSheet.create({
     marginRight: 30,
     backgroundColor: Colors.light.background,
     padding: 10,
-    borderRadius: 10,
-    shadowColor: "#171717",
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
   },
   welcomeText: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
     marginBottom: 5,
     color: Colors.light.text,
@@ -220,32 +465,41 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: "#666",
-    marginBottom: 20,
+    marginBottom: 5,
   },
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   statCard: {
-    backgroundColor: Colors.light.cardBackground,
-    padding: 15,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 16,
     alignItems: "center",
     width: "31%",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(38, 198, 218, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
   },
   statValue: {
     fontSize: 18,
     fontWeight: "bold",
-    marginTop: 8,
+    marginTop: 4,
     color: Colors.light.text,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#666",
     marginTop: 4,
   },
@@ -253,107 +507,171 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   featureBox: {
     width: "48%",
     backgroundColor: Colors.light.cardBackground,
-    padding: 20,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 15,
+    marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  featureIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
   },
   featureText: {
-    marginTop: 10,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "500",
     color: Colors.light.text,
   },
-  goalContainer: {
+  cardContainer: {
     backgroundColor: Colors.light.cardBackground,
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 20,
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  goalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: Colors.light.primaryButton,
+    fontWeight: "500",
+  },
+  goalProgressContainer: {
+    marginBottom: 16,
   },
   goalProgressBar: {
-    height: 8,
+    height: 10,
     backgroundColor: "#E5E7EB",
-    borderRadius: 4,
-    marginVertical: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+    overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: Colors.light.primaryButton,
-    borderRadius: 4,
+    borderRadius: 5,
   },
   goalText: {
     fontSize: 14,
     color: "#666",
+    marginBottom: 5,
   },
-  insightContainer: {
-    backgroundColor: Colors.light.cardBackground,
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 20,
+  goalDetailsContainer: {
+    marginTop: 5,
+  },
+  goalDetailItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  miniCircle: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  goalDetailText: {
+    fontSize: 13,
+    color: "#555",
   },
   insightCard: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
   },
-  insightText: {
-    marginLeft: 12,
-    fontSize: 14,
-    color: Colors.light.text,
+  insightIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  insightTextContainer: {
     flex: 1,
+  },
+  insightText: {
+    fontSize: 15,
+    color: Colors.light.text,
+    marginBottom: 3,
+  },
+  insightTime: {
+    fontSize: 12,
+    color: "#999",
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 15,
     color: Colors.light.text,
   },
-  summaryContainer: {
-    backgroundColor: Colors.light.cardBackground,
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  summaryStats: {
+  summaryStatsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 15,
   },
   summaryItem: {
+    width: "48%",
+    padding: 16,
+    borderRadius: 16,
     alignItems: "center",
   },
   summaryValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: Colors.light.text,
+    marginBottom: 4,
   },
   summaryLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#666",
-    marginTop: 4,
+    marginBottom: 8,
   },
-  upcomingContainer: {
-    backgroundColor: Colors.light.cardBackground,
-    padding: 15,
-    borderRadius: 12,
+  summaryTrend: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  trendText: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginLeft: 2,
   },
   upcomingCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
+    padding: 14,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    marginTop: 15,
+  },
+  upcomingIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   upcomingInfo: {
     flex: 1,
@@ -363,11 +681,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: Colors.light.text,
+    marginBottom: 2,
   },
   upcomingTime: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#666",
-    marginTop: 2,
+  },
+  upcomingActionButton: {
+    backgroundColor: "rgba(38, 198, 218, 0.1)",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  upcomingActionText: {
+    fontSize: 12,
+    color: Colors.light.primaryButton,
+    fontWeight: "500",
   },
 });
 
