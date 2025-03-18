@@ -16,21 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-
-interface Message {
-  id: number;
-  text: string;
-  isBot: boolean;
-  timestamp: Date;
-  status?: "sending" | "sent" | "editing" | "error";
-}
-
-interface BotResponse {
-  message: string;
-  suggestions?: string[];
-  links?: { title: string; url: string }[];
-  errorCode?: string;
-}
+import { sendChatMessage, Message, BotResponse } from "./logics/chatbotService";
 
 const TAB_BAR_HEIGHT = 70;
 
@@ -67,54 +53,6 @@ const ChatBot: React.FC = () => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
 
-  // Mock backend response with structured data
-  const getMockResponse = (userMessage: string): Promise<BotResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Sample structured response
-        if (userMessage.toLowerCase().includes("diet")) {
-          resolve({
-            message:
-              "Here are some healthy diet recommendations based on current nutritional guidelines:",
-            suggestions: [
-              "Focus on whole foods",
-              "Increase vegetable intake",
-              "Limit processed foods",
-              "Stay hydrated",
-            ],
-            links: [
-              {
-                title: "Nutritional Guidelines",
-                url: "https://health.gov/nutrition",
-              },
-              { title: "Meal Planning Tips", url: "https://health.gov/meals" },
-            ],
-          });
-        } else if (userMessage.toLowerCase().includes("exercise")) {
-          resolve({
-            message:
-              "Regular exercise is important for your health. Here are some tips:",
-            suggestions: [
-              "Aim for 150 minutes of moderate activity weekly",
-              "Include strength training twice a week",
-              "Find activities you enjoy",
-            ],
-          });
-        } else {
-          resolve({
-            message:
-              "I understand you're asking about health topics. Could you please be more specific about what information you need?",
-            suggestions: [
-              "Diet tips",
-              "Exercise routines",
-              "Sleep improvement",
-            ],
-          });
-        }
-      }, 1500);
-    });
-  };
-
   const sendMessage = async () => {
     if (message.trim()) {
       // If editing an existing message
@@ -148,8 +86,8 @@ const ChatBot: React.FC = () => {
       setIsTyping(true);
 
       try {
-        // Get structured response from backend
-        const response = await getMockResponse(userMessage);
+        // Get structured response from backend using the service
+        const response = await sendChatMessage(userMessage);
 
         // Update message status to sent
         setMessages((prev) =>

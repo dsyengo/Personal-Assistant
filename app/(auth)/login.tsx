@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { authStyles } from "../../styles/AuthStyles";
 import { Colors } from "../../constants/Colors";
+import { useAuth } from "./AuthContext";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -23,6 +24,7 @@ const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   const validateForm = () => {
     let isValid = true;
@@ -50,15 +52,18 @@ const LoginScreen = () => {
     return isValid;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (validateForm()) {
       setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        Alert.alert("Login", "Login functionality will be added later.");
-      }, 1500);
+      const response = await login(email, password);
+      setIsLoading(false);
+
+      if (response.success) {
+        router.push("/(tabs)");
+      } else {
+        Alert.alert("Login Failed", response.message || "An error occurred.");
+      }
     }
-    router.push("/(tabs)");
   };
 
   return (

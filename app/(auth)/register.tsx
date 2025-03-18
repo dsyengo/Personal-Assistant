@@ -1,5 +1,4 @@
 import {
-  StyleSheet,
   Text,
   View,
   TextInput,
@@ -13,8 +12,12 @@ import React, { useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { authStyles } from "../../styles/AuthStyles";
 import { useRouter } from "expo-router";
+import { useAuth } from "./AuthContext";
 
-const register = () => {
+const RegisterScreen = () => {
+  const { register } = useAuth();
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -27,11 +30,11 @@ const register = () => {
     weight: "",
     lifestyleHabits: "",
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const updateFormData = (key: string, value: string) => {
     setFormData((prevData) => ({
@@ -44,9 +47,9 @@ const register = () => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
-    Object.keys(formData).forEach((key) => {
-      if (!formData[key as keyof typeof formData]) {
-        newErrors[key] = `${key} is required`;
+    Object.entries(formData).forEach(([key, value]) => {
+      if (!value.trim()) {
+        newErrors[key] = `${key.replace(/([A-Z])/g, " $1")} is required`;
         isValid = false;
       }
     });
@@ -60,13 +63,23 @@ const register = () => {
     return isValid;
   };
 
-  const handleRegister = () => {
-    if (validateForm()) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        // Registration success logic
-      }, 2000);
+  const handleRegister = async () => {
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    const { success, message } = await register({
+      ...formData,
+      age: Number(formData.age),
+      height: Number(formData.height),
+      weight: Number(formData.weight),
+    });
+
+    setIsLoading(false);
+
+    if (success) {
+      router.push("/login");
+    } else {
+      setErrors({ general: message || "Registration failed. Try again." });
     }
   };
 
@@ -80,45 +93,145 @@ const register = () => {
           <Text style={authStyles.header}>Create Account</Text>
           <Text style={authStyles.subHeader}>Please fill in your details</Text>
 
-          {Object.entries(formData).map(([key, value]) => (
-            <View key={key} style={authStyles.inputContainer}>
-              <Text style={authStyles.inputLabel}>
-                {key.replace(/([A-Z])/g, " $1").trim()}
-              </Text>
-              {key === "gender" ? (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={(itemValue) => updateFormData(key, itemValue)}
-                  style={authStyles.pickerContainer}
-                >
-                  <Picker.Item label="Male" value="male" />
-                  <Picker.Item label="Female" value="female" />
-                  <Picker.Item label="Other" value="other" />
-                </Picker>
-              ) : (
-                <TextInput
-                  style={authStyles.input}
-                  placeholder={key}
-                  placeholderTextColor="#999"
-                  secureTextEntry={
-                    key.includes("password") && key === "password"
-                      ? !showPassword
-                      : !showConfirmPassword
-                  }
-                  keyboardType={
-                    ["age", "height", "weight"].includes(key)
-                      ? "numeric"
-                      : "default"
-                  }
-                  value={value}
-                  onChangeText={(text) => updateFormData(key, text)}
-                />
-              )}
-              {errors[key] ? (
-                <Text style={authStyles.errorText}>{errors[key]}</Text>
-              ) : null}
-            </View>
-          ))}
+          {errors.general && (
+            <Text style={[authStyles.errorText, { textAlign: "center" }]}>
+              {errors.general}
+            </Text>
+          )}
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.inputLabel}>First Name</Text>
+            <TextInput
+              style={authStyles.input}
+              placeholder="First Name"
+              value={formData.firstName}
+              onChangeText={(text) => updateFormData("firstName", text)}
+            />
+            {errors.firstName && (
+              <Text style={authStyles.errorText}>{errors.firstName}</Text>
+            )}
+          </View>
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.inputLabel}>Last Name</Text>
+            <TextInput
+              style={authStyles.input}
+              placeholder="Last Name"
+              value={formData.lastName}
+              onChangeText={(text) => updateFormData("lastName", text)}
+            />
+            {errors.lastName && (
+              <Text style={authStyles.errorText}>{errors.lastName}</Text>
+            )}
+          </View>
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.inputLabel}>Email</Text>
+            <TextInput
+              style={authStyles.input}
+              placeholder="Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={formData.email}
+              onChangeText={(text) => updateFormData("email", text)}
+            />
+            {errors.email && (
+              <Text style={authStyles.errorText}>{errors.email}</Text>
+            )}
+          </View>
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.inputLabel}>Age</Text>
+            <TextInput
+              style={authStyles.input}
+              placeholder="Age"
+              keyboardType="numeric"
+              value={formData.age}
+              onChangeText={(text) => updateFormData("age", text)}
+            />
+            {errors.age && (
+              <Text style={authStyles.errorText}>{errors.age}</Text>
+            )}
+          </View>
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.inputLabel}>Gender</Text>
+            <Picker
+              selectedValue={formData.gender}
+              onValueChange={(itemValue) => updateFormData("gender", itemValue)}
+              style={authStyles.pickerContainer}
+            >
+              <Picker.Item label="Male" value="male" />
+              <Picker.Item label="Female" value="female" />
+              <Picker.Item label="Other" value="other" />
+            </Picker>
+          </View>
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.inputLabel}>Height (cm)</Text>
+            <TextInput
+              style={authStyles.input}
+              placeholder="Height in cm"
+              keyboardType="numeric"
+              value={formData.height}
+              onChangeText={(text) => updateFormData("height", text)}
+            />
+            {errors.height && (
+              <Text style={authStyles.errorText}>{errors.height}</Text>
+            )}
+          </View>
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.inputLabel}>Weight (kg)</Text>
+            <TextInput
+              style={authStyles.input}
+              placeholder="Weight in kg"
+              keyboardType="numeric"
+              value={formData.weight}
+              onChangeText={(text) => updateFormData("weight", text)}
+            />
+            {errors.weight && (
+              <Text style={authStyles.errorText}>{errors.weight}</Text>
+            )}
+          </View>
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.inputLabel}>Lifestyle Habits</Text>
+            <TextInput
+              style={authStyles.input}
+              placeholder="Lifestyle Habits"
+              value={formData.lifestyleHabits}
+              onChangeText={(text) => updateFormData("lifestyleHabits", text)}
+            />
+          </View>
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.inputLabel}>Password</Text>
+            <TextInput
+              style={authStyles.input}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              value={formData.password}
+              onChangeText={(text) => updateFormData("password", text)}
+            />
+            {errors.password && (
+              <Text style={authStyles.errorText}>{errors.password}</Text>
+            )}
+          </View>
+
+          <View style={authStyles.inputContainer}>
+            <Text style={authStyles.inputLabel}>Confirm Password</Text>
+            <TextInput
+              style={authStyles.input}
+              placeholder="Confirm Password"
+              secureTextEntry={!showConfirmPassword}
+              value={formData.confirmPassword}
+              onChangeText={(text) => updateFormData("confirmPassword", text)}
+            />
+            {errors.confirmPassword && (
+              <Text style={authStyles.errorText}>{errors.confirmPassword}</Text>
+            )}
+          </View>
 
           <TouchableOpacity
             style={authStyles.button}
@@ -144,6 +257,4 @@ const register = () => {
   );
 };
 
-export default register;
-
-const styles = StyleSheet.create({});
+export default RegisterScreen;

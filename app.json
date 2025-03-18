@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#4A90E2"
       },
-       "package": "com.smartafya.app"
+      "package": "com.smartafya.app"
     },
     "web": {
       "bundler": "metro",
@@ -40,4 +40,3 @@
     }
   }
 }
-
