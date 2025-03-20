@@ -24,7 +24,7 @@ export const sendChatMessage = async (
   userMessage: string
 ): Promise<BotResponse> => {
   try {
-    const response = await fetch("http://localhost:3000/api/chatbot/chat", {
+    const response = await fetch("http://192.168.81.93:3000/api/chatbot/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -16,7 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { sendChatMessage, Message, BotResponse } from "./logics/chatbotService";
+import { sendChatMessage, Message, BotResponse } from "../../services/logics/chatbotService";
 
 const TAB_BAR_HEIGHT = 70;
 

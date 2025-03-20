@@ -8,154 +8,124 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 
-interface Meal {
-  id: number;
-  name: string;
+interface Nutrition {
   calories: number;
   protein: number;
-  carbs: number;
   fat: number;
+  carbs: number;
+}
+
+interface MealLog {
+  id: number;
+  mealType: string;
+  mealDescription: string;
+  nutrition: Nutrition;
+  suggestions: string[];
+  date: string;
 }
 
 const DietAnalysis: React.FC = () => {
-  const [meals, setMeals] = useState<Meal[]>([]);
-  const [mealName, setMealName] = useState("");
-  const [calories, setCalories] = useState("");
-  const [protein, setProtein] = useState("");
-  const [carbs, setCarbs] = useState("");
-  const [fat, setFat] = useState("");
+  const [mealType, setMealType] = useState<string>("breakfast");
+  const [mealDescription, setMealDescription] = useState<string>("");
+  const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
 
-  const addMeal = () => {
-    if (!mealName || !calories || !protein || !carbs || !fat) return;
-    const newMeal: Meal = {
-      id: meals.length + 1,
-      name: mealName,
-      calories: parseInt(calories),
-      protein: parseInt(protein),
-      carbs: parseInt(carbs),
-      fat: parseInt(fat),
+  const analyzeMeal = () => {
+    if (!mealDescription) return;
+
+    // Mock nutrition data (Replace with API call)
+    const newMeal: MealLog = {
+      id: mealLogs.length + 1,
+      mealType,
+      mealDescription,
+      nutrition: {
+        calories: Math.floor(Math.random() * 500) + 100,
+        protein: Math.floor(Math.random() * 50) + 10,
+        fat: Math.floor(Math.random() * 30) + 5,
+        carbs: Math.floor(Math.random() * 100) + 20,
+      },
+      suggestions: [
+        "Consider adding more vegetables",
+        "Try reducing sugar intake",
+        "Increase protein for better muscle recovery",
+      ],
+      date: new Date().toLocaleDateString(),
     };
-    setMeals([...meals, newMeal]);
-    setMealName("");
-    setCalories("");
-    setProtein("");
-    setCarbs("");
-    setFat("");
-  };
 
-  const totalNutrients = meals.reduce(
-    (acc, meal) => {
-      acc.calories += meal.calories;
-      acc.protein += meal.protein;
-      acc.carbs += meal.carbs;
-      acc.fat += meal.fat;
-      return acc;
-    },
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
-  );
+    setMealLogs([...mealLogs, newMeal]);
+    setMealDescription("");
+  };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
-      <ScrollView>
-        <Text style={styles.title}>Diet Analysis</Text>
+      <Text style={styles.title}>Diet Analysis</Text>
 
-        {/* Summary Insights */}
-        {meals.length > 0 && (
-          <View style={styles.summaryContainer}>
-            <Text style={styles.summaryTitle}>Daily Intake Summary</Text>
-            <Text style={styles.summaryText}>
-              Calories: {totalNutrients.calories} kcal
-            </Text>
-            <Text style={styles.summaryText}>
-              Protein: {totalNutrients.protein}g
-            </Text>
-            <Text style={styles.summaryText}>
-              Carbs: {totalNutrients.carbs}g
-            </Text>
-            <Text style={styles.summaryText}>Fat: {totalNutrients.fat}g</Text>
-          </View>
-        )}
+      {/* Input Section */}
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Select Meal Type</Text>
+        <Picker
+          selectedValue={mealType}
+          onValueChange={(itemValue) => setMealType(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Breakfast" value="breakfast" />
+          <Picker.Item label="Lunch" value="lunch" />
+          <Picker.Item label="Dinner" value="dinner" />
+          <Picker.Item label="Snacks" value="snacks" />
+        </Picker>
 
-        {/* Meal List */}
-        <FlatList
-          data={meals}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.mealItem}>
-              <View style={styles.mealHeader}>
-                <Text style={styles.mealName}>{item.name}</Text>
-                <Ionicons
-                  name="restaurant"
-                  size={20}
-                  color={Colors.light.primaryButton}
-                />
-              </View>
-              <Text style={styles.mealDetails}>
-                {item.calories} kcal | {item.protein}g Protein | {item.carbs}g
-                Carbs | {item.fat}g Fat
-              </Text>
-            </View>
-          )}
+        <Text style={styles.label}>Describe Your Meal</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="E.g. Rice, Chicken, Vegetables..."
+          value={mealDescription}
+          onChangeText={setMealDescription}
         />
 
-        {/* Input Form */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.sectionTitle}>Log Your Meal</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Meal Name"
-            value={mealName}
-            onChangeText={setMealName}
+        <TouchableOpacity style={styles.addButton} onPress={analyzeMeal}>
+          <Ionicons
+            name="checkmark-circle"
+            size={40}
+            color={Colors.light.primaryButton}
           />
-          <View style={styles.row}>
-            <TextInput
-              style={[styles.input, styles.smallInput]}
-              placeholder="Calories"
-              value={calories}
-              onChangeText={setCalories}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={[styles.input, styles.smallInput]}
-              placeholder="Protein (g)"
-              value={protein}
-              onChangeText={setProtein}
-              keyboardType="numeric"
-            />
+        </TouchableOpacity>
+      </View>
+
+      {/* Output Section */}
+      <FlatList
+        data={mealLogs}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.resultContainer}>
+            <Text style={styles.mealType}>{item.mealType.toUpperCase()}</Text>
+            <Text style={styles.mealDesc}>{item.mealDescription}</Text>
+            <Text style={styles.nutritionText}>
+              Calories: {item.nutrition.calories} kcal
+            </Text>
+            <Text style={styles.nutritionText}>
+              Protein: {item.nutrition.protein}g
+            </Text>
+            <Text style={styles.nutritionText}>
+              Carbs: {item.nutrition.carbs}g
+            </Text>
+            <Text style={styles.nutritionText}>Fat: {item.nutrition.fat}g</Text>
+
+            <Text style={styles.suggestionTitle}>Suggestions:</Text>
+            {item.suggestions.map((suggestion, index) => (
+              <Text key={index} style={styles.suggestionText}>
+                - {suggestion}
+              </Text>
+            ))}
           </View>
-          <View style={styles.row}>
-            <TextInput
-              style={[styles.input, styles.smallInput]}
-              placeholder="Carbs (g)"
-              value={carbs}
-              onChangeText={setCarbs}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={[styles.input, styles.smallInput]}
-              placeholder="Fat (g)"
-              value={fat}
-              onChangeText={setFat}
-              keyboardType="numeric"
-            />
-          </View>
-          <TouchableOpacity style={styles.addButton} onPress={addMeal}>
-            <Ionicons
-              name="add-circle"
-              size={40}
-              color={Colors.light.primaryButton}
-            />
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        )}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -173,66 +143,24 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-  summaryContainer: {
+  inputContainer: {
     backgroundColor: Colors.light.cardBackground,
     padding: 16,
     borderRadius: 10,
     marginBottom: 20,
     elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
-  summaryTitle: {
-    fontSize: 18,
+  label: {
+    fontSize: 16,
     fontWeight: "bold",
     color: Colors.light.text,
     marginBottom: 5,
   },
-  summaryText: {
-    fontSize: 16,
-    color: Colors.light.text,
-  },
-  mealItem: {
-    backgroundColor: Colors.light.cardBackground,
-    padding: 12,
-    borderRadius: 10,
+  picker: {
+    height: 50,
+    backgroundColor: Colors.light.background,
+    borderRadius: 8,
     marginBottom: 10,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  mealHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  mealName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.light.text,
-  },
-  mealDetails: {
-    fontSize: 14,
-    color: Colors.light.text,
-    marginTop: 5,
-  },
-  inputContainer: {
-    marginTop: 20,
-    padding: 16,
-    borderRadius: 10,
-    backgroundColor: Colors.light.cardBackground,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: Colors.light.text,
-    marginBottom: 10,
-    textAlign: "center",
   },
   input: {
     padding: 10,
@@ -243,17 +171,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     backgroundColor: Colors.light.background,
   },
-  smallInput: {
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
   addButton: {
     alignItems: "center",
     marginTop: 10,
+  },
+  resultContainer: {
+    backgroundColor: Colors.light.cardBackground,
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 10,
+    elevation: 3,
+  },
+  mealType: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: Colors.light.primaryButton,
+    marginBottom: 5,
+  },
+  mealDesc: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.light.text,
+    marginBottom: 5,
+  },
+  nutritionText: {
+    fontSize: 14,
+    color: Colors.light.text,
+    marginBottom: 2,
+  },
+  suggestionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: Colors.light.text,
+    marginTop: 5,
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: Colors.light.text,
   },
 });
 

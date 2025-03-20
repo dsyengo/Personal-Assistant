@@ -12,29 +12,22 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { FontAwesome, MaterialIcons, Ionicons } from "@expo/vector-icons";
 
+type ActiveTabProps = {
+  children: React.ReactNode;
+  focused: boolean;
+  index: number;
+  translateX: Animated.Value;
+  scaleValue: Animated.Value;
+};
+
 const { width } = Dimensions.get("window");
 const TAB_WIDTH = width / 5;
-const TAB_BAR_HEIGHT = 60; // Define tab bar height for consistent layout adjustments
-
-const TabIndicator: React.FC<{
-  tabWidth: number;
-  translateX: Animated.Value;
-}> = ({ tabWidth, translateX }) => (
-  <Animated.View
-    style={[
-      styles.indicator,
-      {
-        transform: [{ translateX }],
-        width: tabWidth - 20,
-      },
-    ]}
-  />
-);
+const TAB_BAR_HEIGHT = 70;
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const translateX = useRef(new Animated.Value(0)).current;
-  const scaleY = useRef(new Animated.Value(1)).current;
+  const scaleValue = useRef(new Animated.Value(1)).current;
 
   const animateTab = (index: number) => {
     Animated.parallel([
@@ -45,12 +38,12 @@ export default function TabLayout() {
         friction: 8,
       }),
       Animated.sequence([
-        Animated.timing(scaleY, {
-          toValue: 0.8,
-          duration: 150,
+        Animated.timing(scaleValue, {
+          toValue: 0.9,
+          duration: 100,
           useNativeDriver: true,
         }),
-        Animated.spring(scaleY, {
+        Animated.spring(scaleValue, {
           toValue: 1,
           useNativeDriver: true,
           tension: 100,
@@ -68,9 +61,9 @@ export default function TabLayout() {
       <Tabs
         screenOptions={{
           tabBarShowLabel: false,
-          headerShown: true, // Preserve header properties
+          headerShown: true,
           tabBarStyle: [styles.tabBar],
-          tabBarActiveTintColor: Colors.light.tabIconSelected,
+          tabBarActiveTintColor: Colors.light.primaryButton,
           tabBarInactiveTintColor: Colors.light.tabIconDefault,
         }}
         screenListeners={({ navigation }) => ({
@@ -84,14 +77,18 @@ export default function TabLayout() {
           name="index"
           options={{
             tabBarIcon: ({ color, focused }) => (
-              <View style={styles.tabIconContainer}>
+              <ActiveTabBackground
+                focused={focused}
+                index={0}
+                translateX={translateX}
+                scaleValue={scaleValue}
+              >
                 <Ionicons
                   name={focused ? "home" : "home-outline"}
                   size={26}
                   color={color}
                 />
-                <TabIndicator tabWidth={TAB_WIDTH} translateX={translateX} />
-              </View>
+              </ActiveTabBackground>
             ),
           }}
         />
@@ -100,13 +97,18 @@ export default function TabLayout() {
           name="metrics"
           options={{
             tabBarIcon: ({ color, focused }) => (
-              <View style={styles.tabIconContainer}>
+              <ActiveTabBackground
+                focused={focused}
+                index={1}
+                translateX={translateX}
+                scaleValue={scaleValue}
+              >
                 <MaterialIcons
                   name={focused ? "bar-chart" : "show-chart"}
                   size={26}
                   color={color}
                 />
-              </View>
+              </ActiveTabBackground>
             ),
             title: "Health-Metrics",
           }}
@@ -133,10 +135,15 @@ export default function TabLayout() {
         <Tabs.Screen
           name="diet"
           options={{
-            tabBarIcon: ({ color }) => (
-              <View style={styles.tabIconContainer}>
+            tabBarIcon: ({ color, focused }) => (
+              <ActiveTabBackground
+                focused={focused}
+                index={3}
+                translateX={translateX}
+                scaleValue={scaleValue}
+              >
                 <FontAwesome name="apple" size={26} color={color} />
-              </View>
+              </ActiveTabBackground>
             ),
             title: "Diet Analysis",
           }}
@@ -146,13 +153,18 @@ export default function TabLayout() {
           name="profile"
           options={{
             tabBarIcon: ({ color, focused }) => (
-              <View style={styles.tabIconContainer}>
+              <ActiveTabBackground
+                focused={focused}
+                index={4}
+                translateX={translateX}
+                scaleValue={scaleValue}
+              >
                 <Ionicons
                   name={focused ? "person" : "person-outline"}
                   size={26}
                   color={color}
                 />
-              </View>
+              </ActiveTabBackground>
             ),
             title: "Profile",
           }}
@@ -162,10 +174,22 @@ export default function TabLayout() {
   );
 }
 
+const ActiveTabBackground: React.FC<ActiveTabProps> = ({
+  children,
+  focused,
+}) => {
+  return (
+    <View style={styles.tabIconContainer}>
+      {focused && <View style={styles.activeBackground} />}
+      {children}
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   tabBar: {
     position: "absolute",
-    bottom: 0, // Fix tab bar position at the bottom without unnecessary gap
+    bottom: 0,
     left: 0,
     right: 0,
     height: TAB_BAR_HEIGHT,
@@ -180,26 +204,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.light.background,
   },
-  indicator: {
-    position: "absolute",
-    bottom: 8,
-    height: 3,
-    backgroundColor: Colors.light.primaryButton,
-    borderRadius: 3,
-    marginHorizontal: 10,
-  },
   tabIconContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    width: TAB_WIDTH,
+    height: 30,
+  },
+  activeBackground: {
+    position: "absolute",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0, 122, 255, 0.1)",
+    zIndex: -1,
   },
   chatbotContainer: {
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: Colors.light.primaryButton,
-    marginTop: -32,
+    marginTop: -20,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: Colors.light.primaryButton,
