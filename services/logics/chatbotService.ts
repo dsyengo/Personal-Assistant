@@ -20,11 +20,13 @@ export interface BotResponse {
  * @param userMessage - The message text sent by the user
  * @returns A promise containing the structured bot response
  */
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 export const sendChatMessage = async (
   userMessage: string
 ): Promise<BotResponse> => {
   try {
-    const response = await fetch("http://192.168.81.93:3000/api/chatbot/chat", {
+    const response = await fetch(`${API_BASE_URL}/chatbot/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

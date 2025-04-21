@@ -1,0 +1,120 @@
+import { StyleSheet } from "react-native";
+
+export const authStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    padding: 16,
+  },
+  cardContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 24,
+    marginVertical: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#333333",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  subHeader: {
+    fontSize: 16,
+    color: "#666666",
+    marginBottom: 24,
+    textAlign: "center",
+  },
+  sectionContainer: {
+    marginBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEEEEE",
+    paddingBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333333",
+    marginBottom: 16,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#555555",
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#DDDDDD",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    backgroundColor: "#FAFAFA",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#DDDDDD",
+    borderRadius: 8,
+    backgroundColor: "#FAFAFA",
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: "#DDDDDD",
+    borderRadius: 8,
+    backgroundColor: "#FAFAFA",
+    marginBottom: 0,
+  },
+  errorText: {
+    color: "#E53935",
+    fontSize: 14,
+    marginTop: 4,
+  },
+  button: {
+    backgroundColor: "#4A90E2",
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  linkContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 24,
+  },
+  linkText: {
+    color: "#666666",
+    fontSize: 14,
+  },
+  link: {
+    color: "#4A90E2",
+    fontSize: 14,
+    fontWeight: "500",
+    marginLeft: 4,
+  },
+});

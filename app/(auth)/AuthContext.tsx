@@ -46,7 +46,7 @@ export type RegisterFormData = {
 
 // Set API Base URL
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || "http://192.168.81.93:3000/api";
+  process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
 
 // Create Auth Context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -104,8 +104,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const data = JSON.parse(text); // Parse JSON safely
         console.log("Parsed JSON:", data);
-
-
 
         if (response.ok && data.token) {
           await AsyncStorage.setItem("token", data.token);
