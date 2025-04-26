@@ -1,529 +1,301 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   TextInput,
-  ScrollView,
+  TouchableOpacity,
+  FlatList,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from "react-native";
-import React, { useState, useRef, useEffect } from "react";
-import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../(auth)/AuthContext";
 import { Colors } from "@/constants/Colors";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { sendChatMessage, Message, BotResponse } from "../../services/logics/chatbotService";
+import { sendChatMessage, getChatLogs } from "@/services/chatbotService";
 
-const TAB_BAR_HEIGHT = 70;
+type Message = {
+  id: string;
+  text: string;
+  sender: "user" | "bot";
+  timestamp: Date;
+};
 
-const ChatBot: React.FC = () => {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const [message, setMessage] = useState<string>("");
-  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
-  const [isTyping, setIsTyping] = useState<boolean>(false);
+const ChatbotScreen = () => {
+  const { user } = useAuth();
+  const userId = user?.id;
+  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: 1,
-      text: "Hello! I'm your health assistant. How can I help?",
-      isBot: true,
-      timestamp: new Date(),
-    },
-    {
-      id: 2,
-      text: "You can ask me about:",
-      isBot: true,
-      timestamp: new Date(),
-    },
-    {
-      id: 3,
-      text: "• Diet and nutrition\n• Exercise tips\n• Health tracking",
-      isBot: true,
+      id: "1",
+      text: `Hello ${
+        user?.firstName || "there"
+      }! I'm your AI Health Assistant. How can I help you today?`,
+      sender: "bot",
       timestamp: new Date(),
     },
   ]);
+  const [isTyping, setIsTyping] = useState(false);
 
-  const scrollViewRef = useRef<ScrollView>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
+    if (userId) {
+      getChatLogs();
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (message.trim()) {
-      // If editing an existing message
-      if (editingMessageId !== null) {
-        setMessages(
-          messages.map((msg) =>
-            msg.id === editingMessageId
-              ? { ...msg, text: message, status: "sent" }
-              : msg
-          )
-        );
-        setEditingMessageId(null);
-        setMessage("");
-        return;
-      }
+  const handleSend = () => {
+    if (!message.trim()) return;
 
-      // Sending a new message
-      const newMessageId = messages.length + 1;
-      setMessages([
-        ...messages,
-        {
-          id: newMessageId,
-          text: message,
-          isBot: false,
-          timestamp: new Date(),
-          status: "sending",
-        },
-      ]);
-      const userMessage = message;
-      setMessage("");
-      setIsTyping(true);
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: message,
+      sender: "user",
+      timestamp: new Date(),
+    };
 
-      try {
-        // Get structured response from backend using the service
-        const response = await sendChatMessage(userMessage);
-
-        // Update message status to sent
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === newMessageId ? { ...msg, status: "sent" } : msg
-          )
-        );
-
-        // Add bot response with main message
-        const botMessageId = messages.length + 2;
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: botMessageId,
-            text: response.message,
-            isBot: true,
-            timestamp: new Date(),
-          },
-        ]);
-
-        // If there are suggestions, add them as a separate message
-        if (response.suggestions && response.suggestions.length > 0) {
-          setTimeout(() => {
-            const suggestionText = response
-              .suggestions!.map((s) => `• ${s}`)
-              .join("\n");
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: prev.length + 1,
-                text: suggestionText,
-                isBot: true,
-                timestamp: new Date(),
-              },
-            ]);
-          }, 500);
-        }
-
-        // If there are links, add them as a separate message
-        if (response.links && response.links.length > 0) {
-          setTimeout(() => {
-            const linksText =
-              "Helpful resources:\n" +
-              response.links!.map((l) => `• ${l.title}`).join("\n");
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: prev.length + 1,
-                text: linksText,
-                isBot: true,
-                timestamp: new Date(),
-              },
-            ]);
-          }, 1000);
-        }
-      } catch (error) {
-        // Handle error
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === newMessageId ? { ...msg, status: "error" } : msg
-          )
-        );
-
-        Alert.alert("Error", "Failed to send message. Please try again.", [
-          { text: "OK" },
-        ]);
-      } finally {
-        setIsTyping(false);
-      }
-    }
-  };
-
-  const editMessage = (id: number) => {
-    const messageToEdit = messages.find((msg) => msg.id === id);
-    if (messageToEdit && !messageToEdit.isBot) {
-      setEditingMessageId(id);
-      setMessage(messageToEdit.text);
-
-      // Update status to editing
-      setMessages(
-        messages.map((msg) =>
-          msg.id === id ? { ...msg, status: "editing" } : msg
-        )
-      );
-    }
-  };
-
-  const cancelEditing = () => {
-    setEditingMessageId(null);
+    setMessages((prev) => [...prev, userMessage]);
     setMessage("");
+    setIsTyping(true);
 
-    // Reset status
-    setMessages(
-      messages.map((msg) =>
-        msg.id === editingMessageId ? { ...msg, status: "sent" } : msg
-      )
-    );
+    // Simulate AI response
+    setTimeout(() => {
+      const botResponse = generateBotResponse(message);
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: botResponse,
+        sender: "bot",
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+      setIsTyping(false);
+    }, 1500);
+  };
+
+  const formatBotMessage = (message: string): string => {
+    return message
+      .replace(/\\/g, "") // Remove escaped slashes
+      .replace(/\r?\n|\r/g, "\n") // Normalize newlines
+      .replace(/\*\*(.*?)\*\*/g, "$1") // Strip bold markdown
+      .replace(/__([^_]+)__/g, "$1") // Strip italic markdown
+      .replace(/\[(.*?)\]\((.*?)\)/g, "$1 ($2)") // Format links as plain text with URL
+      .trim();
+  };
+
+  const generateBotResponse = async (userMessage: string): Promise<string> => {
+    try {
+      const botResponse = await sendChatMessage(userMessage);
+
+      if (botResponse.errorCode) {
+        return botResponse.message;
+      }
+
+      return formatBotMessage(botResponse.message);
+    } catch (error) {
+      console.error("Error generating bot response:", error);
+      return "There was an issue processing your request. Please try again later.";
+    }
   };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  const renderMessageStatus = (status?: string) => {
-    switch (status) {
-      case "sending":
-        return <Text style={styles.messageStatus}>Sending...</Text>;
-      case "error":
-        return (
-          <Text style={[styles.messageStatus, styles.errorStatus]}>
-            Failed to send
-          </Text>
-        );
-      case "editing":
-        return <Text style={styles.messageStatus}>Editing...</Text>;
-      default:
-        return null;
-    }
-  };
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.light.background,
+    },
+    chatContainer: {
+      flex: 1,
+      padding: 16,
+    },
+    messageContainer: {
+      marginBottom: 16,
+      maxWidth: "80%",
+    },
+    userMessage: {
+      alignSelf: "flex-end",
+      backgroundColor: Colors.light.secondaryButton,
+      borderRadius: 16,
+      borderBottomRightRadius: 4,
+      padding: 12,
+      color: Colors.light.text,
+    },
+    botMessage: {
+      alignSelf: "flex-start",
+      backgroundColor: Colors.light.tabIconSelected,
+      borderRadius: 16,
+      borderBottomLeftRadius: 4,
+      padding: 12,
+    },
+    userMessageText: {
+      color: "white",
+      fontSize: 16,
+    },
+    botMessageText: {
+      color: Colors.light.text,
+      fontSize: 16,
+    },
+    timestamp: {
+      fontSize: 12,
+      color: Colors.light.text,
+      opacity: 0.6,
+      marginTop: 4,
+      alignSelf: "flex-end",
+    },
+    inputContainer: {
+      flexDirection: "row",
+      padding: 16,
+      borderTopWidth: 1,
+      borderTopColor: Colors.light.tint,
+      backgroundColor: Colors.light.inputBackground,
+    },
+    input: {
+      flex: 1,
+      backgroundColor: Colors.light.background,
+      borderRadius: 24,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      marginRight: 8,
+      color: Colors.light.text,
+    },
+    sendButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: Colors.light.primaryButton,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    typingIndicator: {
+      alignSelf: "flex-start",
+      backgroundColor: Colors.light.cardBackground,
+      borderRadius: 16,
+      borderBottomLeftRadius: 4,
+      padding: 12,
+      marginBottom: 16,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    typingText: {
+      color: Colors.light.text,
+      marginLeft: 8,
+    },
+    suggestionContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      marginBottom: 16,
+      justifyContent: "center",
+    },
+    suggestionButton: {
+      backgroundColor: Colors.light.cardBackground,
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      margin: 4,
+      borderWidth: 1,
+      borderColor: Colors.light.secondaryButton,
+    },
+    suggestionText: {
+      color: Colors.light.text,
+      fontSize: 14,
+    },
+  });
+
+  const suggestions = [
+    "How can I improve my diet?",
+    "Recommend a workout routine",
+    "Tips for better sleep",
+    "How to reduce stress",
+    "Daily water intake",
+  ];
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerTitle: "Health Assistant",
-          headerTitleStyle: styles.headerTitle,
-          headerLeft: () => (
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={() => router.back()}
-            >
-              <Ionicons name="arrow-back" size={24} color={Colors.light.text} />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <TouchableOpacity style={styles.headerButton}>
-              <Ionicons
-                name="information-circle"
-                size={24}
-                color={Colors.light.text}
-              />
-            </TouchableOpacity>
-          ),
-        }}
-      />
-
-      <KeyboardAvoidingView
-        style={styles.flexContainer}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={TAB_BAR_HEIGHT + insets.bottom + 20}
-      >
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.messagesContainer}
-          contentContainerStyle={{
-            paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 40,
-          }}
-          keyboardShouldPersistTaps="handled"
-        >
-          {messages.map((msg) => (
-            <Animated.View
-              key={msg.id}
-              entering={FadeInDown.duration(300)}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+    >
+      <View style={styles.chatContainer}>
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={
+            <View style={styles.suggestionContainer}>
+              {suggestions.map((suggestion, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.suggestionButton}
+                  onPress={() => {
+                    setMessage(suggestion);
+                  }}
+                >
+                  <Text style={styles.suggestionText}>{suggestion}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          }
+          renderItem={({ item }) => (
+            <View
               style={[
-                styles.messageWrapper,
-                msg.isBot
-                  ? styles.botMessageWrapper
-                  : styles.userMessageWrapper,
+                styles.messageContainer,
+                item.sender === "user" ? styles.userMessage : styles.botMessage,
               ]}
             >
-              {msg.isBot && (
-                <View style={styles.botAvatar}>
-                  <Ionicons name="medical" size={16} color="#fff" />
-                </View>
-              )}
-              <View
-                style={[
-                  styles.message,
-                  msg.isBot ? styles.botMessage : styles.userMessage,
-                  msg.status === "editing" && styles.editingMessage,
-                  msg.status === "error" && styles.errorMessage,
-                ]}
+              <Text
+                style={
+                  item.sender === "user"
+                    ? styles.userMessageText
+                    : styles.botMessageText
+                }
               >
-                <Text
-                  style={[
-                    styles.messageText,
-                    msg.isBot ? styles.botMessageText : styles.userMessageText,
-                  ]}
-                >
-                  {msg.text}
-                </Text>
-                <View style={styles.messageFooter}>
-                  {renderMessageStatus(msg.status)}
-                  <Text style={styles.timestamp}>
-                    {formatTime(msg.timestamp)}
-                  </Text>
-                </View>
-              </View>
-
-              {!msg.isBot && !msg.status?.includes("editing") && (
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() => editMessage(msg.id)}
-                >
-                  <Ionicons
-                    name="pencil"
-                    size={16}
-                    color={Colors.light.tabIconDefault}
-                  />
-                </TouchableOpacity>
-              )}
-            </Animated.View>
-          ))}
-
-          {isTyping && (
-            <Animated.View
-              entering={FadeInUp.duration(300)}
-              style={[styles.messageWrapper, styles.botMessageWrapper]}
-            >
-              <View style={styles.botAvatar}>
-                <Ionicons name="medical" size={16} color="#fff" />
-              </View>
-              <View
-                style={[
-                  styles.message,
-                  styles.botMessage,
-                  styles.typingIndicator,
-                ]}
-              >
+                {item.text}
+              </Text>
+              <Text style={styles.timestamp}>{formatTime(item.timestamp)}</Text>
+            </View>
+          )}
+          ListFooterComponent={
+            isTyping ? (
+              <View style={styles.typingIndicator}>
                 <ActivityIndicator
                   size="small"
                   color={Colors.light.primaryButton}
                 />
+                <Text style={styles.typingText}>AI Assistant is typing...</Text>
               </View>
-            </Animated.View>
-          )}
-        </ScrollView>
+            ) : null
+          }
+        />
+      </View>
 
-        <Animated.View
-          entering={FadeInUp.duration(300)}
-          style={[
-            styles.inputContainer,
-            { marginBottom: TAB_BAR_HEIGHT + insets.bottom + 10 },
-          ]}
-        >
-          {editingMessageId === null ? (
-            <TouchableOpacity style={styles.attachButton}>
-              <Ionicons
-                name="add-circle"
-                size={28}
-                color={Colors.light.primaryButton}
-              />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={styles.attachButton}
-              onPress={cancelEditing}
-            >
-              <Ionicons
-                name="close-circle"
-                size={28}
-                color={Colors.light.tint}
-              />
-            </TouchableOpacity>
-          )}
-
-          <TextInput
-            style={styles.input}
-            placeholder={
-              editingMessageId !== null
-                ? "Edit your message..."
-                : "Type your message..."
-            }
-            value={message}
-            onChangeText={setMessage}
-            multiline
-            placeholderTextColor={Colors.light.tabIconDefault}
-          />
-
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              !message.trim() && styles.disabledButton,
-            ]}
-            onPress={sendMessage}
-            disabled={!message.trim()}
-          >
-            <Ionicons
-              name={editingMessageId !== null ? "checkmark" : "send"}
-              size={28}
-              color={
-                message.trim()
-                  ? Colors.light.primaryButton
-                  : Colors.light.tabIconDefault
-              }
-            />
-          </TouchableOpacity>
-        </Animated.View>
-      </KeyboardAvoidingView>
-    </View>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Type a message..."
+          placeholderTextColor={Colors.light.text + "80"}
+          value={message}
+          onChangeText={setMessage}
+          multiline
+        />
+        <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+          <Ionicons name="send" size={20} color="white" />
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-  },
-  flexContainer: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.light.text,
-  },
-  headerButton: {
-    padding: 10,
-  },
-  messagesContainer: {
-    flex: 1,
-  },
-  messageWrapper: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    marginBottom: 8,
-    paddingHorizontal: 12,
-  },
-  botMessageWrapper: {
-    justifyContent: "flex-start",
-  },
-  userMessageWrapper: {
-    justifyContent: "flex-end",
-  },
-  botAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.light.primaryButton,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
-  },
-  message: {
-    maxWidth: "80%",
-    padding: 12,
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  botMessage: {
-    backgroundColor: Colors.light.cardBackground,
-    borderTopLeftRadius: 4,
-  },
-  userMessage: {
-    backgroundColor: Colors.light.primaryButton,
-    borderTopRightRadius: 4,
-  },
-  editingMessage: {
-    borderWidth: 2,
-    borderColor: Colors.light.tint,
-    opacity: 0.8,
-  },
-  errorMessage: {
-    borderWidth: 1,
-    borderColor: "#ff6b6b",
-  },
-  messageText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  botMessageText: {
-    color: Colors.light.text,
-  },
-  userMessageText: {
-    color: "#fff",
-  },
-  messageFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 4,
-    alignItems: "center",
-  },
-  messageStatus: {
-    fontSize: 11,
-    color: Colors.light.tabIconDefault,
-    fontStyle: "italic",
-  },
-  errorStatus: {
-    color: "#ff6b6b",
-  },
-  timestamp: {
-    fontSize: 10,
-    color: Colors.light.tabIconDefault,
-    textAlign: "right",
-  },
-  editButton: {
-    padding: 8,
-    marginLeft: 4,
-  },
-  typingIndicator: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    height: 40,
-    justifyContent: "center",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    backgroundColor: Colors.light.background,
-  },
-  attachButton: {
-    padding: 8,
-  },
-  input: {
-    flex: 1,
-    marginHorizontal: 8,
-    padding: 10,
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 20,
-    maxHeight: 100,
-    fontSize: 14,
-    color: Colors.light.text,
-  },
-  sendButton: {
-    padding: 8,
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-});
-
-export default ChatBot;
+export default ChatbotScreen;

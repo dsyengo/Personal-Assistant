@@ -1,25 +1,16 @@
-import { Stack } from "expo-router";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "../app/(auth)/AuthContext";
-import { Colors } from "@/constants/Colors";
+import { ThemeProvider } from "./contexts/theme-context";
+import RootNavigator from "./navigator";
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: Colors.light.primaryButton,
-          },
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="+not-found"
-          options={{ headerShown: true, title: "Page Not Found" }}
-        />
-      </Stack>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <RootNavigator />
+        </ThemeProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

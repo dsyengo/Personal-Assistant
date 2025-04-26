@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
 type User = {
   _id: string;
@@ -45,8 +46,7 @@ export type RegisterFormData = {
 };
 
 // Set API Base URL
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 // Create Auth Context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,25 +56,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
+    const checkUserLoggedIn = async () => {
+      try {
+        const userJson = await AsyncStorage.getItem("user");
+        const token = await AsyncStorage.getItem("token");
+
+        if (userJson && token) {
+          const user = JSON.parse(userJson);
+          const now = Date.now();
+
+          if (user.expiresAt && now < user.expiresAt) {
+            setUser(user);
+          } else {
+            // Expired — cleanup
+            await AsyncStorage.multiRemove(["token", "user"]);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking user login status:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     checkUserLoggedIn();
   }, []);
 
-  const checkUserLoggedIn = async () => {
-    try {
-      const userJson = await AsyncStorage.getItem("user");
-      const token = await AsyncStorage.getItem("token");
-
-      if (userJson && token) {
-        setUser(JSON.parse(userJson));
+  // Effect for navigating after the initial load and checking user login
+  useEffect(() => {
+    if (!isLoading) {
+      if (user) {
+        // Navigate to (tabs) if user is authenticated
+        router.push("/(tabs)");
+      } else {
+        // Navigate to (auth) if no user
+        router.push("/(auth)/login");
       }
-    } catch (error) {
-      console.error("Error checking user login status:", error);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [isLoading, user, router]);
 
   const isLoggedIn = async (): Promise<boolean> => {
     try {
@@ -95,39 +117,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const response = await fetch(`${API_BASE_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
-      // Read response as text first to debug
+
       const text = await response.text();
-      console.log("Raw response:", text);
 
-      try {
-        const data = JSON.parse(text); // Parse JSON safely
-        console.log("Parsed JSON:", data);
+      const data = JSON.parse(text);
 
-        if (response.ok && data.token) {
-          await AsyncStorage.setItem("token", data.token);
-          await AsyncStorage.setItem("user", JSON.stringify(data.user));
-          setUser(data.user);
-          return { success: true };
-        }
-
-        return {
-          success: false,
-          message: data.msg || "Invalid credentials. Please try again.",
+      if (response.ok && data.user && data.token) {
+        const expiresAt = Date.now() + 48 * 60 * 60 * 1000; // 48 hours
+        const userToStore = {
+          ...data.user,
+          expiresAt,
         };
-      } catch (jsonError) {
-        console.error("JSON Parse Error: Unexpected response format", text);
-        return {
-          success: false,
-          message: "Unexpected server response. Check console for details.",
-        };
+
+        await AsyncStorage.setItem("user", JSON.stringify(userToStore));
+        await AsyncStorage.setItem("token", data.token); // ⬅️ Store token here
+
+        setUser(data.user);
+        return { success: true };
       }
+
+      return {
+        success: false,
+        message: data.message || "Invalid credentials. Please try again.",
+      };
     } catch (error) {
       console.error("Login error:", error);
       return {
         success: false,
-        message: "Network error. Please check your connection and try again.",
+        message: "Network error. Please check your connection.",
       };
     } finally {
       setIsLoading(false);
@@ -169,13 +189,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const logout = async (): Promise<void> => {
+  //sign out
+  const signOut = async () => {
     setIsLoading(true);
     try {
       await AsyncStorage.multiRemove(["token", "user"]);
       setUser(null);
+      router.push("/(auth)/login");
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Sign out failed", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -252,15 +275,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  //updateHealthProfile
+  const updateHealthProfile = async (
+    email: string,
+    code: string,
+    newPassword: string
+  ): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/confirm-reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code, newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return {
+          success: true,
+          message: "Password has been reset successfully",
+        };
+      }
+      return {
+        success: false,
+        message: data.message || "Failed to reset password. Please try again.",
+      };
+    } catch (error) {
+      console.error("Confirm reset password error:", error);
+      return {
+        success: false,
+        message: "Network error. Please check your connection and try again.",
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     user,
     isLoading,
     login,
     register,
-    logout,
     resetPassword,
     confirmResetPassword,
     isLoggedIn,
+    signOut,
+    updateHealthProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

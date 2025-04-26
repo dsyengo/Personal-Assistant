@@ -1,118 +1,61 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  ListRenderItemInfo,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { authStyles } from "../../styles/AuthStyles2";
 
-type Surgery = {
-  year: number;
-  procedure: string;
-};
-
-type MedicalHistory = {
+interface MedicalHistory {
   allergies: string[];
   chronicConditions: string[];
+  surgeries: string[];
   medications: string[];
-  surgeries: Surgery[];
-};
+}
 
-type MedicalHistorySectionProps = {
+interface Props {
   medicalHistory: MedicalHistory;
-  updateMedicalHistory: (
-    field: keyof MedicalHistory,
-    value: string[] | Surgery[]
-  ) => void;
-  errors?: Record<string, string>;
-};
+  updateMedicalHistory: (key: keyof MedicalHistory, value: string[]) => void;
+  errors: any; // Using any for simplicity
+}
 
-const MedicalHistorySection: React.FC<MedicalHistorySectionProps> = ({
+const MedicalHistorySection: React.FC<Props> = ({
   medicalHistory,
   updateMedicalHistory,
   errors,
 }) => {
-  const [newAllergy, setNewAllergy] = useState<string>("");
-  const [newCondition, setNewCondition] = useState<string>("");
-  const [newMedication, setNewMedication] = useState<string>("");
-  const [newSurgery, setNewSurgery] = useState<{
-    year: string;
-    procedure: string;
-  }>({
-    year: "",
-    procedure: "",
-  });
+  const [newAllergy, setNewAllergy] = useState("");
+  const [newCondition, setNewCondition] = useState("");
+  const [newSurgery, setNewSurgery] = useState("");
+  const [newMedication, setNewMedication] = useState("");
 
-  const addAllergy = () => {
-    if (newAllergy.trim()) {
-      const updatedAllergies = [...medicalHistory.allergies, newAllergy.trim()];
-      updateMedicalHistory("allergies", updatedAllergies);
-      setNewAllergy("");
-    }
+  const addItem = (
+    key: keyof MedicalHistory,
+    item: string,
+    clearFunction: React.Dispatch<React.SetStateAction<string>>
+  ) => {
+    if (!item.trim()) return;
+
+    const newArray = [...medicalHistory[key], item.trim()];
+    updateMedicalHistory(key, newArray);
+    clearFunction("");
   };
 
-  const removeAllergy = (index: number) => {
-    const updatedAllergies = [...medicalHistory.allergies];
-    updatedAllergies.splice(index, 1);
-    updateMedicalHistory("allergies", updatedAllergies);
+  const removeItem = (key: keyof MedicalHistory, index: number) => {
+    const newArray = [...medicalHistory[key]];
+    newArray.splice(index, 1);
+    updateMedicalHistory(key, newArray);
   };
 
-  const addChronicCondition = () => {
-    if (newCondition.trim()) {
-      const updatedConditions = [
-        ...medicalHistory.chronicConditions,
-        newCondition.trim(),
-      ];
-      updateMedicalHistory("chronicConditions", updatedConditions);
-      setNewCondition("");
-    }
-  };
-
-  const removeChronicCondition = (index: number) => {
-    const updatedConditions = [...medicalHistory.chronicConditions];
-    updatedConditions.splice(index, 1);
-    updateMedicalHistory("chronicConditions", updatedConditions);
-  };
-
-  const addMedication = () => {
-    if (newMedication.trim()) {
-      const updatedMedications = [
-        ...medicalHistory.medications,
-        newMedication.trim(),
-      ];
-      updateMedicalHistory("medications", updatedMedications);
-      setNewMedication("");
-    }
-  };
-
-  const removeMedication = (index: number) => {
-    const updatedMedications = [...medicalHistory.medications];
-    updatedMedications.splice(index, 1);
-    updateMedicalHistory("medications", updatedMedications);
-  };
-
-  const addSurgery = () => {
-    if (newSurgery.year && newSurgery.procedure.trim()) {
-      const updatedSurgeries = [
-        ...medicalHistory.surgeries,
-        {
-          year: parseInt(newSurgery.year),
-          procedure: newSurgery.procedure.trim(),
-        },
-      ];
-      updateMedicalHistory("surgeries", updatedSurgeries);
-      setNewSurgery({ year: "", procedure: "" });
-    }
-  };
-
-  const removeSurgery = (index: number) => {
-    const updatedSurgeries = [...medicalHistory.surgeries];
-    updatedSurgeries.splice(index, 1);
-    updateMedicalHistory("surgeries", updatedSurgeries);
+  const renderChips = (items: string[], type: keyof MedicalHistory) => {
+    return (
+      <View style={authStyles.chipContainer}>
+        {items.map((item, index) => (
+          <View key={index} style={authStyles.chip}>
+            <Text style={authStyles.chipText}>{item}</Text>
+            <TouchableOpacity onPress={() => removeItem(type, index)}>
+              <Text style={authStyles.chipRemove}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
+    );
   };
 
   return (
@@ -120,247 +63,90 @@ const MedicalHistorySection: React.FC<MedicalHistorySectionProps> = ({
       <Text style={authStyles.sectionTitle}>Medical History</Text>
 
       {/* Allergies */}
-      <View style={styles.subsection}>
+      <View style={authStyles.inputContainer}>
         <Text style={authStyles.inputLabel}>Allergies</Text>
-        <View style={styles.addItemContainer}>
+        <View style={{ flexDirection: "row" }}>
           <TextInput
-            style={styles.addItemInput}
+            style={[authStyles.input, { flex: 1, marginRight: 8 }]}
             placeholder="Add an allergy"
             value={newAllergy}
             onChangeText={setNewAllergy}
           />
-          <TouchableOpacity style={styles.addButton} onPress={addAllergy}>
-            <Text style={styles.addButtonText}>+</Text>
+          <TouchableOpacity
+            style={[authStyles.button, { marginTop: 0, padding: 10 }]}
+            onPress={() => addItem("allergies", newAllergy, setNewAllergy)}
+          >
+            <Text style={authStyles.buttonText}>Add</Text>
           </TouchableOpacity>
         </View>
-        <FlatList
-          data={medicalHistory.allergies}
-          keyExtractor={(_, index) => `allergy-${index}`}
-          renderItem={({ item, index }: ListRenderItemInfo<string>) => (
-            <View style={styles.listItem}>
-              <Text style={styles.listItemText}>{item}</Text>
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeAllergy(index)}
-              >
-                <Text style={styles.removeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.emptyListText}>No allergies added</Text>
-          }
-          style={styles.list}
-        />
+        {renderChips(medicalHistory.allergies, "allergies")}
       </View>
 
       {/* Chronic Conditions */}
-      <View style={styles.subsection}>
+      <View style={authStyles.inputContainer}>
         <Text style={authStyles.inputLabel}>Chronic Conditions</Text>
-        <View style={styles.addItemContainer}>
+        <View style={{ flexDirection: "row" }}>
           <TextInput
-            style={styles.addItemInput}
-            placeholder="Add a chronic condition"
+            style={[authStyles.input, { flex: 1, marginRight: 8 }]}
+            placeholder="Add a condition"
             value={newCondition}
             onChangeText={setNewCondition}
           />
           <TouchableOpacity
-            style={styles.addButton}
-            onPress={addChronicCondition}
+            style={[authStyles.button, { marginTop: 0, padding: 10 }]}
+            onPress={() =>
+              addItem("chronicConditions", newCondition, setNewCondition)
+            }
           >
-            <Text style={styles.addButtonText}>+</Text>
+            <Text style={authStyles.buttonText}>Add</Text>
           </TouchableOpacity>
         </View>
-        <FlatList
-          data={medicalHistory.chronicConditions}
-          keyExtractor={(_, index) => `condition-${index}`}
-          renderItem={({ item, index }: ListRenderItemInfo<string>) => (
-            <View style={styles.listItem}>
-              <Text style={styles.listItemText}>{item}</Text>
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeChronicCondition(index)}
-              >
-                <Text style={styles.removeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.emptyListText}>
-              No chronic conditions added
-            </Text>
-          }
-          style={styles.list}
-        />
+        {renderChips(medicalHistory.chronicConditions, "chronicConditions")}
       </View>
 
       {/* Surgeries */}
-      <View style={styles.subsection}>
-        <Text style={authStyles.inputLabel}>Past Surgeries</Text>
-        <View style={styles.surgeryInputContainer}>
+      <View style={authStyles.inputContainer}>
+        <Text style={authStyles.inputLabel}>Surgeries</Text>
+        <View style={{ flexDirection: "row" }}>
           <TextInput
-            style={[styles.surgeryInput, styles.yearInput]}
-            placeholder="Year"
-            keyboardType="numeric"
-            value={newSurgery.year}
-            onChangeText={(text) =>
-              setNewSurgery({ ...newSurgery, year: text })
-            }
+            style={[authStyles.input, { flex: 1, marginRight: 8 }]}
+            placeholder="Add a surgery"
+            value={newSurgery}
+            onChangeText={setNewSurgery}
           />
-          <TextInput
-            style={[styles.surgeryInput, styles.procedureInput]}
-            placeholder="Procedure"
-            value={newSurgery.procedure}
-            onChangeText={(text) =>
-              setNewSurgery({ ...newSurgery, procedure: text })
-            }
-          />
-          <TouchableOpacity style={styles.addButton} onPress={addSurgery}>
-            <Text style={styles.addButtonText}>+</Text>
+          <TouchableOpacity
+            style={[authStyles.button, { marginTop: 0, padding: 10 }]}
+            onPress={() => addItem("surgeries", newSurgery, setNewSurgery)}
+          >
+            <Text style={authStyles.buttonText}>Add</Text>
           </TouchableOpacity>
         </View>
-        <FlatList
-          data={medicalHistory.surgeries}
-          keyExtractor={(_, index) => `surgery-${index}`}
-          renderItem={({ item, index }: ListRenderItemInfo<Surgery>) => (
-            <View style={styles.listItem}>
-              <Text style={styles.listItemText}>
-                {item.year}: {item.procedure}
-              </Text>
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeSurgery(index)}
-              >
-                <Text style={styles.removeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.emptyListText}>No surgeries added</Text>
-          }
-          style={styles.list}
-        />
+        {renderChips(medicalHistory.surgeries, "surgeries")}
       </View>
 
       {/* Medications */}
-      <View style={styles.subsection}>
-        <Text style={authStyles.inputLabel}>Current Medications</Text>
-        <View style={styles.addItemContainer}>
+      <View style={authStyles.inputContainer}>
+        <Text style={authStyles.inputLabel}>Medications</Text>
+        <View style={{ flexDirection: "row" }}>
           <TextInput
-            style={styles.addItemInput}
+            style={[authStyles.input, { flex: 1, marginRight: 8 }]}
             placeholder="Add a medication"
             value={newMedication}
             onChangeText={setNewMedication}
           />
-          <TouchableOpacity style={styles.addButton} onPress={addMedication}>
-            <Text style={styles.addButtonText}>+</Text>
+          <TouchableOpacity
+            style={[authStyles.button, { marginTop: 0, padding: 10 }]}
+            onPress={() =>
+              addItem("medications", newMedication, setNewMedication)
+            }
+          >
+            <Text style={authStyles.buttonText}>Add</Text>
           </TouchableOpacity>
         </View>
-        <FlatList
-          data={medicalHistory.medications}
-          keyExtractor={(_, index) => `medication-${index}`}
-          renderItem={({ item, index }: ListRenderItemInfo<string>) => (
-            <View style={styles.listItem}>
-              <Text style={styles.listItemText}>{item}</Text>
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeMedication(index)}
-              >
-                <Text style={styles.removeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.emptyListText}>No medications added</Text>
-          }
-          style={styles.list}
-        />
+        {renderChips(medicalHistory.medications, "medications")}
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  subsection: {
-    marginBottom: 16,
-  },
-  addItemContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  addItemInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    padding: 10,
-    marginRight: 8,
-  },
-  addButton: {
-    backgroundColor: "#4A90E2",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  addButtonText: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  list: {
-    maxHeight: 150,
-  },
-  listItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f0f0f0",
-    padding: 8,
-    borderRadius: 6,
-    marginBottom: 6,
-  },
-  listItemText: {
-    flex: 1,
-  },
-  removeButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#ff6b6b",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  removeButtonText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  emptyListText: {
-    color: "#888",
-    fontStyle: "italic",
-    textAlign: "center",
-    padding: 10,
-  },
-  surgeryInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  surgeryInput: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    padding: 10,
-    marginRight: 8,
-  },
-  yearInput: {
-    width: 80,
-  },
-  procedureInput: {
-    flex: 1,
-  },
-});
 
 export default MedicalHistorySection;

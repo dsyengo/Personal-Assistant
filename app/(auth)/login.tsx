@@ -1,31 +1,42 @@
-import React, { useState } from "react";
+"use client";
+
+import type React from "react";
+import { useState } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  StyleSheet,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   ActivityIndicator,
   Alert,
 } from "react-native";
+import { useAuth } from "./AuthContext";
+import { useTheme } from "../contexts/theme-context";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { authStyles } from "../../styles/AuthStyles";
-import { Colors } from "../../constants/Colors";
-import { useAuth } from "./AuthContext";
 
-const LoginScreen = () => {
+type LoginScreenProps = {
+  navigation: NativeStackNavigationProp<any>;
+};
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
+  const { colors } = useTheme();
 
+  //validate form
   const validateForm = () => {
     let isValid = true;
 
@@ -51,99 +62,180 @@ const LoginScreen = () => {
 
     return isValid;
   };
-
   const handleLogin = async () => {
-    if (validateForm()) {
-      setIsLoading(true);
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
+    try {
       const response = await login(email, password);
-      setIsLoading(false);
 
       if (response.success) {
-        router.push("/(tabs)");
+        Alert.prompt("Welcome");
       } else {
         Alert.alert("Login Failed", response.message || "An error occurred.");
       }
+    } catch (error) {
+      console.error("Unexpected login error:", error);
+      Alert.alert("Login Error", "Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      justifyContent: "center",
+      padding: 20,
+    },
+    logoContainer: {
+      alignItems: "center",
+      marginBottom: 40,
+    },
+    logo: {
+      width: 120,
+      height: 120,
+      resizeMode: "contain",
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: "bold",
+      color: colors.primary,
+      marginTop: 10,
+      textAlign: "center",
+    },
+    subtitle: {
+      fontSize: 16,
+      color: colors.text,
+      marginTop: 5,
+      textAlign: "center",
+      marginBottom: 30,
+    },
+    input: {
+      backgroundColor: colors.card,
+      borderRadius: 8,
+      padding: 15,
+      marginBottom: 15,
+      color: colors.text,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    button: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      padding: 15,
+      alignItems: "center",
+      marginTop: 10,
+    },
+    buttonText: {
+      color: "white",
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+    forgotPassword: {
+      alignSelf: "flex-end",
+      marginBottom: 20,
+    },
+    forgotPasswordText: {
+      color: colors.primary,
+    },
+    footer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      marginTop: 30,
+    },
+    footerText: {
+      color: colors.text,
+    },
+    signupText: {
+      color: colors.primary,
+      fontWeight: "bold",
+      marginLeft: 5,
+    },
+  });
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView
-        contentContainerStyle={authStyles.scrollContainer}
-        style={authStyles.container}
-      >
-        <View style={authStyles.cardContainer}>
-          <Text style={authStyles.header}>Welcome Back</Text>
-          <Text style={authStyles.subHeader}>Sign in to continue</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={{ uri: "https://via.placeholder.com/120" }}
+            style={styles.logo}
+          />
+          <Text style={styles.title}>Health Assistant</Text>
+          <Text style={styles.subtitle}>
+            Your AI-powered personal health companion
+          </Text>
+        </View>
 
-          <View style={authStyles.inputContainer}>
-            <Text style={authStyles.inputLabel}>Email</Text>
-            <TextInput
-              style={authStyles.input}
-              placeholder="Enter your email"
-              placeholderTextColor="#999"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
-            {emailError ? (
-              <Text style={authStyles.errorText}>{emailError}</Text>
-            ) : null}
-          </View>
+        <View>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={colors.text + "80"}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          {emailError ? <Text style={colors.error}>{emailError}</Text> : null}
+        </View>
 
-          <View style={authStyles.inputContainer}>
-            <Text style={authStyles.inputLabel}>Password</Text>
-            <View style={{ position: "relative" }}>
-              <TextInput
-                style={authStyles.input}
-                placeholder="Enter your password"
-                placeholderTextColor="#999"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-              />
-              <TouchableOpacity
-                style={{ position: "absolute", right: 15, top: 12 }}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={24}
-                  color={Colors.light.text}
-                />
-              </TouchableOpacity>
-            </View>
-            {passwordError ? (
-              <Text style={authStyles.errorText}>{passwordError}</Text>
-            ) : null}
-          </View>
-
-          <TouchableOpacity onPress={() => router.push("/forgotpass")}>
-            <Text style={authStyles.forgotPassword}>Forgot Password?</Text>
-          </TouchableOpacity>
-
+        <View>
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={colors.text + "80"}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
           <TouchableOpacity
-            style={authStyles.button}
-            onPress={handleLogin}
-            disabled={isLoading}
+            style={{ position: "absolute", right: 15, top: 12 }}
+            onPress={() => setShowPassword(!showPassword)}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={authStyles.buttonText}>Login</Text>
-            )}
+            <Ionicons
+              name={showPassword ? "eye-off" : "eye"}
+              size={24}
+              color={colors.text}
+            />
           </TouchableOpacity>
+          {passwordError ? (
+            <Text style={colors.error}>{passwordError}</Text>
+          ) : null}
+        </View>
 
-          <View style={authStyles.linkContainer}>
-            <Text style={authStyles.linkText}>Don't have an account?</Text>
-            <TouchableOpacity onPress={() => router.push("/register")}>
-              <Text style={authStyles.link}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
+        <TouchableOpacity
+          style={styles.forgotPassword}
+          onPress={() => router.push("/(auth)/forgotpass")}
+        >
+          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleLogin}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.buttonText}>Sign In</Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Don't have an account?</Text>
+          <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
+            <Text style={styles.signupText}>Sign Up</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

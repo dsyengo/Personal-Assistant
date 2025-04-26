@@ -1,214 +1,405 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  Image,
   ScrollView,
-  TextInput,
   TouchableOpacity,
+  Switch,
+  Alert,
+  TextInput,
+  Modal,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/Colors";
 import { useAuth } from "../(auth)/AuthContext";
-import * as ImagePicker from "expo-image-picker";
+import { useTheme } from "../contexts/theme-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
-const Profile: React.FC = () => {
-  const { user } = useAuth();
-  const [userData, setUserData] = useState(user);
-  const [editable, setEditable] = useState(false);
-  const [profileImage, setProfileImage] = useState(user?.profileImage || null);
+const ProfileScreen = () => {
+  const { user, signOut, updateHealthProfile } = useAuth();
+  const { colors, isDark, setTheme, theme } = useTheme();
+  const router = useRouter();
 
-  useEffect(() => {
-    if (user) {
-      setUserData(user);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editField, setEditField] = useState<string>("");
+  const [editValue, setEditValue] = useState<string>("");
+  const [editLabel, setEditLabel] = useState<string>("");
+
+  const handleThemeChange = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
+
+  const handleEditField = (field: string, value: any, label: string) => {
+    setEditField(field);
+    setEditValue(value ? value.toString() : "");
+    setEditLabel(label);
+    setEditModalVisible(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editValue.trim()) {
+      Alert.alert("Error", "Please enter a value");
+      return;
     }
-  }, [user]);
 
-  const handleImagePick = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
+    let updatedValue: any = editValue;
+
+    // Convert to number if needed
+    if (["age", "weight", "height"].includes(editField)) {
+      updatedValue = Number(editValue);
+      if (isNaN(updatedValue) || updatedValue <= 0) {
+        Alert.alert("Error", "Please enter a valid number");
+        return;
+      }
+    }
+
+    // Update the health profile
+    updateHealthProfile({
+      ...user,
+      [editField]: updatedValue,
     });
-    if (!result.canceled) {
-      setProfileImage(result.uri);
-    }
+
+    setEditModalVisible(false);
   };
 
-  const handleSave = () => {
-    setEditable(false);
-    // Here, you can integrate an API call to update user info.
+  const handleLogout = () => {
+    Alert.alert("Logout", "Are you sure you want to log out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: () => signOut(),
+      },
+    ]);
   };
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollContent: {
+      padding: 16,
+    },
+    profileHeader: {
+      alignItems: "center",
+      marginBottom: 24,
+    },
+    profileAvatar: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    profileInitial: {
+      fontSize: 40,
+      fontWeight: "bold",
+      color: "white",
+    },
+    profileName: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: 4,
+    },
+    profileEmail: {
+      fontSize: 16,
+      color: colors.text,
+      opacity: 0.7,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: colors.text,
+      marginTop: 16,
+      marginBottom: 12,
+    },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+    },
+    row: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    lastRow: {
+      borderBottomWidth: 0,
+    },
+    rowLabel: {
+      fontSize: 16,
+      color: colors.text,
+    },
+    rowValue: {
+      fontSize: 16,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    editButton: {
+      marginLeft: 8,
+    },
+    settingRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    settingLabel: {
+      fontSize: 16,
+      color: colors.text,
+    },
+    logoutButton: {
+      backgroundColor: colors.error,
+      borderRadius: 8,
+      padding: 16,
+      alignItems: "center",
+      marginTop: 16,
+    },
+    logoutButtonText: {
+      color: "white",
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+    modalContainer: {
+      flex: 1,
+      justifyContent: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modalContent: {
+      backgroundColor: colors.background,
+      margin: 20,
+      borderRadius: 12,
+      padding: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: 16,
+      textAlign: "center",
+    },
+    input: {
+      backgroundColor: colors.card,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 16,
+      color: colors.text,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    modalButtons: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
+    cancelButton: {
+      backgroundColor: colors.border,
+      borderRadius: 8,
+      padding: 12,
+      alignItems: "center",
+      width: "48%",
+    },
+    cancelButtonText: {
+      color: colors.text,
+      fontWeight: "bold",
+    },
+    saveButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      padding: 12,
+      alignItems: "center",
+      width: "48%",
+    },
+    saveButtonText: {
+      color: "white",
+      fontWeight: "bold",
+    },
+  });
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleImagePick}>
-          {profileImage ? (
-            <Image source={{ uri: profileImage }} style={styles.profileImage} />
-          ) : (
-            <Ionicons
-              name="person-circle"
-              size={100}
-              color={Colors.light.primaryButton}
-            />
-          )}
-        </TouchableOpacity>
-        <Text style={styles.name}>
-          {userData.firstName} {userData.lastName}
-        </Text>
-        <Text style={styles.email}>{userData.email}</Text>
-      </View>
-
-      <View style={styles.infoContainer}>
-        <Text style={styles.sectionTitle}>Personal Information</Text>
-        <TextInput
-          style={styles.input}
-          editable={editable}
-          value={userData.phone || "N/A"}
-          placeholder="Phone Number"
-        />
-        <TextInput
-          style={styles.input}
-          editable={editable}
-          value={userData.address || "N/A"}
-          placeholder="Address"
-        />
-        <TextInput
-          style={styles.input}
-          editable={editable}
-          value={userData.age?.toString() || "N/A"}
-          placeholder="Age"
-        />
-        <TextInput
-          style={styles.input}
-          editable={editable}
-          value={userData.gender || "N/A"}
-          placeholder="Gender"
-        />
-        <TextInput
-          style={styles.input}
-          editable={editable}
-          value={userData.height ? `${userData.height} cm` : "N/A"}
-          placeholder="Height"
-        />
-        <TextInput
-          style={styles.input}
-          editable={editable}
-          value={userData.weight ? `${userData.weight} kg` : "N/A"}
-          placeholder="Weight"
-        />
-      </View>
-
-      <View style={styles.infoContainer}>
-        <Text style={styles.sectionTitle}>Lifestyle & Medical</Text>
-        <TextInput
-          style={styles.input}
-          editable={editable}
-          value={userData.lifestyleHabits || "N/A"}
-          placeholder="Lifestyle"
-        />
-        <Text style={styles.info}>Medical History:</Text>
-        <Text style={styles.medicalText}>
-          {JSON.stringify(userData.medicalHistory, null, 2)}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+    >
+      <View style={styles.profileHeader}>
+        <View style={styles.profileAvatar}>
+          <Text style={styles.profileInitial}>
+            {user?.firstName?.charAt(0) || "U"}
+          </Text>
+        </View>
+        <Text style={styles.profileName}>{user?.firstName || "User"}</Text>
+        <Text style={styles.profileEmail}>
+          {user?.email || "user@example.com"}
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.editButton}
-        onPress={() => setEditable(!editable)}
-      >
-        <Text style={styles.buttonText}>
-          {editable ? "Cancel" : "Edit Profile"}
-        </Text>
+      <Text style={styles.sectionTitle}>Health Profile</Text>
+      <View style={styles.card}>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Age</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.rowValue}>{user?.age || "-"}</Text>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => handleEditField("age", user?.age, "Age")}
+            >
+              <Ionicons
+                name="pencil-outline"
+                size={18}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Weight</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.rowValue}>{user?.weight || "-"} kg</Text>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() =>
+                handleEditField("weight", user?.weight, "Weight (kg)")
+              }
+            >
+              <Ionicons
+                name="pencil-outline"
+                size={18}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={[styles.row, styles.lastRow]}>
+          <Text style={styles.rowLabel}>Height</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.rowValue}>{user?.height || "-"} cm</Text>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() =>
+                handleEditField("height", user?.height, "Height (cm)")
+              }
+            >
+              <Ionicons
+                name="pencil-outline"
+                size={18}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <Text style={styles.sectionTitle}>Settings</Text>
+      <View style={styles.card}>
+        <View style={styles.settingRow}>
+          <Text style={styles.settingLabel}>Dark Mode</Text>
+          <Switch
+            value={isDark}
+            onValueChange={handleThemeChange}
+            trackColor={{ false: colors.border, true: colors.primary + "80" }}
+            thumbColor={isDark ? colors.primary : "#f4f3f4"}
+          />
+        </View>
+
+        <View style={[styles.settingRow, styles.lastRow]}>
+          <Text style={styles.settingLabel}>Theme</Text>
+          <View style={{ flexDirection: "row" }}>
+            <TouchableOpacity
+              style={{ marginRight: 16 }}
+              onPress={() => setTheme("light")}
+            >
+              <Ionicons
+                name="sunny"
+                size={24}
+                color={theme === "light" ? colors.primary : colors.text}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ marginRight: 16 }}
+              onPress={() => setTheme("dark")}
+            >
+              <Ionicons
+                name="moon"
+                size={24}
+                color={theme === "dark" ? colors.primary : colors.text}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setTheme("system")}>
+              <Ionicons
+                name="phone-portrait"
+                size={24}
+                color={theme === "system" ? colors.primary : colors.text}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
-      {editable && (
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.buttonText}>Save Changes</Text>
-        </TouchableOpacity>
-      )}
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit {editLabel}</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder={`Enter ${editLabel.toLowerCase()}`}
+              placeholderTextColor={colors.text + "80"}
+              value={editValue}
+              onChangeText={setEditValue}
+              keyboardType={
+                ["age", "weight", "height"].includes(editField)
+                  ? "numeric"
+                  : "default"
+              }
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSaveEdit}
+              >
+                <Text style={styles.saveButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-    padding: 16,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
-  },
-  name: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: Colors.light.text,
-  },
-  email: {
-    fontSize: 16,
-    color: Colors.light.subText,
-  },
-  infoContainer: {
-    backgroundColor: Colors.light.cardBackground,
-    padding: 16,
-    borderRadius: 10,
-    marginBottom: 10,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: Colors.light.primaryButton,
-    marginBottom: 5,
-  },
-  input: {
-    fontSize: 16,
-    color: Colors.light.text,
-    backgroundColor: "#f5f5f5",
-    padding: 8,
-    borderRadius: 5,
-    marginBottom: 5,
-  },
-  info: {
-    fontSize: 16,
-    color: Colors.light.text,
-    marginBottom: 5,
-  },
-  medicalText: {
-    fontSize: 14,
-    color: Colors.light.text,
-    backgroundColor: "#f5f5f5",
-    padding: 5,
-    borderRadius: 5,
-  },
-  editButton: {
-    backgroundColor: Colors.light.primaryButton,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  saveButton: {
-    backgroundColor: Colors.light.success,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  buttonText: {
-    fontSize: 16,
-    color: "white",
-    fontWeight: "bold",
-  },
-});
-
-export default Profile;
+export default ProfileScreen;
