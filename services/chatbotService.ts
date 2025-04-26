@@ -18,8 +18,15 @@ export interface BotResponse {
 interface GetChatLogsResponse {
   success: boolean;
   message: string;
-  data: ChatLog[];
+  data: Message[];
 }
+
+// export type Message = {
+//   id: string;
+//   text: string;
+//   sender: "user" | "bot";
+//   timestamp: Date;
+// };
 
 /**
  * Sends a message to the chatbot backend and returns the structured response.
@@ -89,12 +96,10 @@ export const getChatLogs = async (): Promise<GetChatLogsResponse> => {
       },
     });
 
-    // Log the response status and text
     console.log("Response status:", response.status);
-    const text = await response.text(); // Get the response as text
+    const text = await response.text();
     console.log("Response text:", text);
 
-    // Check if the response is OK before parsing
     if (!response.ok) {
       console.error("Error fetching chat logs:", text);
       return {
@@ -104,23 +109,34 @@ export const getChatLogs = async (): Promise<GetChatLogsResponse> => {
       };
     }
 
-    // Parse the response as JSON
-    const data = JSON.parse(text);
+    const parsedData = JSON.parse(text);
+    console.log("Chat logs data:", parsedData);
 
-    console.log("Chat logs data:", data);
+    const formattedLogs: Message[] = [];
 
-    // If the response is successful, format the chat logs to match the expected structure
-    const formattedLogs = data.data.map((log: any) => ({
-      id: log.id, // Assuming MongoDB ID format, adjust if necessary
-      text: log.text,
-      sender: log.sender === "user" ? "user" : "bot", // Ensure sender is either "user" or "bot"
-      timestamp: new Date(log.timestamp), // Ensure timestamp is in proper Date format
-    }));
+    parsedData.data.forEach((log: any) => {
+      if (log.sender) {
+        formattedLogs.push({
+          id: `${log.id}-user`,
+          text: log.sender,
+          sender: "user",
+          timestamp: new Date(log.timestamp),
+        });
+      }
+      if (log.botResponse) {
+        formattedLogs.push({
+          id: `${log.id}-bot`,
+          text: log.botResponse,
+          sender: "bot",
+          timestamp: new Date(log.timestamp),
+        });
+      }
+    });
 
     return {
       success: true,
       message: "Chat logs fetched successfully",
-      data: formattedLogs || [],
+      data: formattedLogs,
     };
   } catch (error) {
     console.error("Error fetching chat logs:", error);

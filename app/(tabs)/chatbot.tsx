@@ -43,9 +43,37 @@ const ChatbotScreen = () => {
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    if (userId) {
-      getChatLogs();
-    }
+    const fetchChatLogs = async () => {
+      if (userId) {
+        const response = await getChatLogs();
+        if (response.success && response.data.length > 0) {
+          setMessages([
+            {
+              id: "welcome",
+              text: `Hello ${
+                user?.firstName || "there"
+              }! I'm your AI Health Assistant. How can I help you today?`,
+              sender: "bot",
+              timestamp: new Date(),
+            },
+            ...response.data, // Directly use the formatted data from service
+          ]);
+        } else {
+          setMessages([
+            {
+              id: "welcome",
+              text: `Hello ${
+                user?.firstName || "there"
+              }! I'm your AI Health Assistant. How can I help you today?`,
+              sender: "bot",
+              timestamp: new Date(),
+            },
+          ]);
+        }
+      }
+    };
+
+    fetchChatLogs();
   }, [userId]);
 
   useEffect(() => {

@@ -592,7 +592,7 @@ export default function Home() {
               <TouchableOpacity
                 activeOpacity={0.9}
                 style={{ flex: 1 }}
-                onPress={() => handleCardPress("/diet")}
+                onPress={() => handleCardPress("/(tabs)/diet")}
               >
                 <LinearGradient colors={gradients.diet} style={{ flex: 1 }}>
                   <View style={styles.navCardContent}>
