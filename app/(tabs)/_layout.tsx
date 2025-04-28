@@ -7,6 +7,7 @@ import FitnessScreen from "./metrics";
 import DietScreen from "./diet";
 import ChatbotScreen from "./chatbot";
 import ProfileScreen from "./profile";
+import Reports from "../screens/reports";
 import { useTheme } from "../contexts/theme-context";
 
 const Tab = createBottomTabNavigator();
@@ -112,6 +113,26 @@ const ProfileStack = () => {
   );
 };
 
+const ReportsStack = () => {
+  const { colors } = useTheme();
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.background,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: colors.text,
+        cardStyle: { backgroundColor: colors.background },
+      }}
+    >
+      <Stack.Screen name="Health Reports" component={Reports} />
+    </Stack.Navigator>
+  );
+};
+
 const MainNavigator = () => {
   const { colors, isDark } = useTheme();
 
@@ -131,6 +152,8 @@ const MainNavigator = () => {
             iconName = focused ? "chatbubble" : "chatbubble-outline";
           } else if (route.name === "Profile") {
             iconName = focused ? "person" : "person-outline";
+          } else if (route.name === "Reports") {
+            iconName = focused ? "document-text" : "document-text-outline";
           }
 
           return <Ionicons name={iconName as any} size={size} color={color} />;
@@ -149,6 +172,7 @@ const MainNavigator = () => {
       <Tab.Screen name="Chat" component={ChatbotStack} />
       <Tab.Screen name="Diet" component={DietStack} />
       <Tab.Screen name="Profile" component={ProfileStack} />
+      <Tab.Screen name="Reports" component={ReportsStack} />
     </Tab.Navigator>
   );
 };

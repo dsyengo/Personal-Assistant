@@ -17,7 +17,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../(auth)/AuthContext";
 import { Picker } from "@react-native-picker/picker";
 
-
 type Meal = {
   id: string;
   name: string;
@@ -194,7 +193,7 @@ const DietScreen = () => {
     });
   };
 
-  const deleteMeal = (id: string) => {
+  const deleteMeal = (dietLog: DietLog) => {
     Alert.alert("Delete Meal", "Are you sure you want to delete this meal?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -202,20 +201,23 @@ const DietScreen = () => {
         style: "destructive",
         onPress: async () => {
           try {
-            // Check if this is a meal from the backend (has an _id)
-            const dietLog = dietLogs.find((log) => log._id === id);
-            if (dietLog) {
-              // Delete from backend
-              const response = await fetch(`${API_URL}/diet/logs/${id}`, {
-                method: "DELETE",
-              });
-              if (!response.ok) {
-                throw new Error("Failed to delete diet log");
-              }
+            const logId = dietLog._id;
+            console.log("Deleting log with ID:", logId);
+            const response = await fetch(`${API_URL}/diet/delete/${logId}`, {
+              method: "DELETE",
+            });
+
+            if (!response.ok) {
+              throw new Error("Failed to delete diet log");
             }
-            // Update local state
-            setMeals(meals.filter((meal) => meal.id !== id));
-            setDietLogs(dietLogs.filter((log) => log._id !== id));
+
+            // Update local states
+            setMeals((prevMeals) =>
+              prevMeals.filter((meal) => meal.id !== dietLog._id)
+            );
+            setDietLogs((prevLogs) =>
+              prevLogs.filter((log) => log._id !== dietLog._id)
+            );
           } catch (error) {
             console.error("Error deleting meal:", error);
             Alert.alert("Error", "Failed to delete meal");
@@ -224,6 +226,70 @@ const DietScreen = () => {
       },
     ]);
   };
+
+  //log meal manually
+  // const logMealManually = async () => {
+  //   if (!manualMeal.name.trim() || !manualMeal.calories) {
+  //     Alert.alert("Error", "Please enter all meal details");
+  //     return;
+  //   }
+
+  //   if (!userId) {
+  //     Alert.alert("Error", "User not authenticated");
+  //     return;
+  //   }
+
+  //   setIsLogging(true);
+  //   try {
+  //     const response = await fetch(`${API_URL}/diet/log`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         userId,
+  //         mealData: {
+  //           name: manualMeal.name,
+  //           calories: manualMeal.calories,
+  //           protein: manualMeal.protein || 0,
+  //           carbs: manualMeal.carbs || 0,
+  //           fat: manualMeal.fat || 0,
+  //           mealType: manualMeal.mealType || "Other",
+  //         },
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error("Failed to log meal");
+  //     }
+
+  //     const data = await response.json();
+
+  //     const newMeal = {
+  //       id: data._id,
+  //       name: data.name,
+  //       calories: data.calories,
+  //       protein: data.protein,
+  //       carbs: data.carbs,
+  //       fat: data.fat,
+  //       time: new Date(data.createdAt).toLocaleTimeString([], {
+  //         hour: "2-digit",
+  //         minute: "2-digit",
+  //       }),
+  //       mealType: data.mealType,
+  //     };
+
+  //     setMeals([...meals, newMeal]);
+  //     setDietLogs([...dietLogs, data]);
+
+  //     Alert.alert("Success", "Meal logged successfully!");
+  //   } catch (error) {
+  //     console.error("Error logging meal:", error);
+  //     Alert.alert("Error", "Failed to log meal");
+  //   } finally {
+  //     setIsLogging(false);
+  //   }
+  // };
 
   const analyzeMeal = async () => {
     if (!mealToAnalyze.mealDescription.trim()) {
@@ -238,7 +304,7 @@ const DietScreen = () => {
 
     setIsAnalyzing(true);
     try {
-      const response = await fetch(`${API_URL}/diet/log`, {
+      const response = await fetch(`${API_URL}/diet/analyze`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -262,14 +328,16 @@ const DietScreen = () => {
         suggestions: data.suggestions,
       });
 
+      console.log(data);
+
       // Add the analyzed meal to the meals list
       const newMeal: Meal = {
         id: data._id,
         name: data.mealDescription,
-        calories: data.nutrition.analysis.nutrition.calories,
-        protein: data.nutrition.analysis.nutrition.protein,
-        carbs: data.nutrition.analysis.nutrition.carbs,
-        fat: data.nutrition.analysis.nutrition.fat,
+        calories: data.nutrition.calories,
+        protein: data.nutrition.protein,
+        carbs: data.nutrition.carbs,
+        fat: data.nutrition.fat,
         time: new Date(data.createdAt).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",

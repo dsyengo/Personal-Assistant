@@ -3,12 +3,21 @@ import { Stack } from "expo-router";
 import { useAuth } from "./(auth)/AuthContext";
 import { ActivityIndicator, View } from "react-native";
 import { useTheme } from "../app/contexts/theme-context";
+import { useState, useEffect } from "react";
 
 const RootNavigator = () => {
   const { user, isLoading } = useAuth();
   const { colors } = useTheme();
+  const [showWelcome, setShowWelcome] = useState(true);
 
-  // Show a loading indicator while loading the user state
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+    }, 3000); // show welcome screen for 3 seconds (adjust if you want)
+
+    return () => clearTimeout(timer);
+  }, []);
+
   if (isLoading) {
     return (
       <View
@@ -24,10 +33,15 @@ const RootNavigator = () => {
     );
   }
 
-  // After loading, navigate to (tabs) if user is logged in or (auth) if not
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {user ? <Stack.Screen name="(tabs)" /> : <Stack.Screen name="(auth)" />}
+      {showWelcome ? (
+        <Stack.Screen name="index" />
+      ) : user ? (
+        <Stack.Screen name="(tabs)" />
+      ) : (
+        <Stack.Screen name="(auth)" />
+      )}
     </Stack>
   );
 };

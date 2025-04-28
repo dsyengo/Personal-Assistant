@@ -15,12 +15,14 @@ import {
 } from "react-native";
 import { useAuth } from "../(auth)/AuthContext";
 import { useTheme } from "../contexts/theme-context";
+import { useNotifications } from "../contexts/notifications-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 const ProfileScreen = () => {
   const { user, signOut, updateHealthProfile } = useAuth();
   const { colors, isDark, setTheme, theme } = useTheme();
+  const { hasPermission } = useNotifications();
 
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editField, setEditField] = useState<string>("");
@@ -238,6 +240,11 @@ const ProfileScreen = () => {
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
+    notificationStatusText: {
+      fontSize: 14,
+      color: hasPermission ? colors.success : colors.error,
+      marginLeft: 8,
+    },
   });
 
   return (
@@ -248,10 +255,10 @@ const ProfileScreen = () => {
       <View style={styles.profileHeader}>
         <View style={styles.profileAvatar}>
           <Text style={styles.profileInitial}>
-            {user?.firstName?.charAt(0) || "U"}
+            {user?.name?.charAt(0) || "U"}
           </Text>
         </View>
-        <Text style={styles.profileName}>{user?.firstName || "User"}</Text>
+        <Text style={styles.profileName}>{user?.name || "User"}</Text>
         <Text style={styles.profileEmail}>
           {user?.email || "user@example.com"}
         </Text>
@@ -262,10 +269,14 @@ const ProfileScreen = () => {
         <View style={styles.row}>
           <Text style={styles.rowLabel}>Age</Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.rowValue}>{user?.age || "-"}</Text>
+            <Text style={styles.rowValue}>
+              {user?.healthProfile?.age || "-"}
+            </Text>
             <TouchableOpacity
               style={styles.editButton}
-              onPress={() => handleEditField("age", user?.age, "Age")}
+              onPress={() =>
+                handleEditField("age", user?.healthProfile?.age, "Age")
+              }
             >
               <Ionicons
                 name="pencil-outline"
@@ -279,11 +290,17 @@ const ProfileScreen = () => {
         <View style={styles.row}>
           <Text style={styles.rowLabel}>Weight</Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.rowValue}>{user?.weight || "-"} kg</Text>
+            <Text style={styles.rowValue}>
+              {user?.healthProfile?.weight || "-"} kg
+            </Text>
             <TouchableOpacity
               style={styles.editButton}
               onPress={() =>
-                handleEditField("weight", user?.weight, "Weight (kg)")
+                handleEditField(
+                  "weight",
+                  user?.healthProfile?.weight,
+                  "Weight (kg)"
+                )
               }
             >
               <Ionicons
@@ -298,11 +315,17 @@ const ProfileScreen = () => {
         <View style={[styles.row, styles.lastRow]}>
           <Text style={styles.rowLabel}>Height</Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.rowValue}>{user?.height || "-"} cm</Text>
+            <Text style={styles.rowValue}>
+              {user?.healthProfile?.height || "-"} cm
+            </Text>
             <TouchableOpacity
               style={styles.editButton}
               onPress={() =>
-                handleEditField("height", user?.height, "Height (cm)")
+                handleEditField(
+                  "height",
+                  user?.healthProfile?.height,
+                  "Height (cm)"
+                )
               }
             >
               <Ionicons
@@ -313,6 +336,22 @@ const ProfileScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
+      </View>
+
+      <Text style={styles.sectionTitle}>Notifications</Text>
+      <View style={styles.card}>
+        <TouchableOpacity
+          style={styles.settingRow}
+          onPress={() => router.push("/notification-settings")}
+        >
+          <Text style={styles.settingLabel}>Notification Settings</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.notificationStatusText}>
+              {hasPermission ? "Enabled" : "Disabled"}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.text} />
+          </View>
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.sectionTitle}>Settings</Text>
@@ -327,7 +366,7 @@ const ProfileScreen = () => {
           />
         </View>
 
-        <View style={styles.settingRow}>
+        <View style={[styles.settingRow, styles.lastRow]}>
           <Text style={styles.settingLabel}>Theme</Text>
           <View style={{ flexDirection: "row" }}>
             <TouchableOpacity
@@ -365,7 +404,7 @@ const ProfileScreen = () => {
       <View style={styles.card}>
         <TouchableOpacity
           style={styles.helpRow}
-          onPress={() => router.push("/components/faq")}
+          onPress={() => router.push("/faq")}
         >
           <Text style={styles.settingLabel}>Frequently Asked Questions</Text>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
@@ -373,7 +412,7 @@ const ProfileScreen = () => {
 
         <TouchableOpacity
           style={styles.helpRow}
-          onPress={() => router.push("/components/help")}
+          onPress={() => router.push("/help")}
         >
           <Text style={styles.settingLabel}>Help Center</Text>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
@@ -381,7 +420,7 @@ const ProfileScreen = () => {
 
         <TouchableOpacity
           style={[styles.helpRow, styles.lastRow]}
-          onPress={() => Linking.openURL("mailto:devs.masterchief@gmail.com")}
+          onPress={() => Linking.openURL("mailto:support@healthassistant.com")}
         >
           <Text style={styles.settingLabel}>Contact Support</Text>
           <Ionicons name="mail-outline" size={20} color={colors.text} />

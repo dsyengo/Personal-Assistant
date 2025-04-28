@@ -15,7 +15,7 @@ import {
 import { useAuth } from "../(auth)/AuthContext";
 import { useTheme } from "../contexts/theme-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -23,7 +23,6 @@ const { width } = Dimensions.get("window");
 const cardWidth = (width - 48) / 2;
 
 export default function Home() {
-  const router = useRouter();
   const { user } = useAuth();
   const { colors } = useTheme();
   const [greeting, setGreeting] = useState("");
@@ -82,7 +81,11 @@ export default function Home() {
     }, 1500);
   }, []);
 
-  const handleCardPress = (route) => {
+  // Fix the navigation in the quick access cards
+  // Replace the existing handleCardPress function with this improved version:
+
+  const handleCardPress = (route: string) => {
+    // Animation on press
     Animated.sequence([
       Animated.timing(scaleAnim, {
         toValue: 0.95,
@@ -94,9 +97,10 @@ export default function Home() {
         duration: 100,
         useNativeDriver: true,
       }),
-    ]).start();
-    // Navigate AFTER animation completes
-    router.push(route);
+    ]).start(() => {
+      // Navigate to the route after animation completes
+      router.push(route);
+    });
   };
 
   const getUnreadNotificationsCount = () => {
@@ -424,12 +428,15 @@ export default function Home() {
     },
   });
 
-  // Gradient colors for navigation cards
+  // Update the gradients object to include a reports gradient
+  // Replace the existing gradients object with:
+
   const gradients = {
     fitness: ["#4CAF50", "#8BC34A"],
     chat: ["#03A9F4", "#00BCD4"],
     diet: ["#FF9800", "#FFEB3B"],
     profile: ["#9C27B0", "#673AB7"],
+    reports: ["#3F51B5", "#2196F3"],
   };
 
   return (
@@ -443,18 +450,20 @@ export default function Home() {
         {/* Header Section */}
         <View style={styles.header}>
           <View style={styles.greetingContainer}>
-            {user?.profilePicture ? (
-              <Image
-                source={{ uri: user.profilePicture }}
-                style={styles.profileImage}
-              />
-            ) : (
-              <View style={styles.profileImage}>
-                <Text style={styles.profileInitial}>
-                  {user?.firstName?.charAt(0) || "U"}
-                </Text>
-              </View>
-            )}
+            <TouchableOpacity onPress={() => router.push("/profile")}>
+              {user?.profilePicture ? (
+                <Image
+                  source={{ uri: user.profilePicture }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <View style={styles.profileImage}>
+                  <Text style={styles.profileInitial}>
+                    {user?.firstName?.charAt(0) || "U"}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
             <View>
               <Text style={styles.greetingText}>
                 {greeting},{" "}
@@ -525,6 +534,9 @@ export default function Home() {
         </View>
 
         {/* Quick Navigation Cards */}
+        {/* Update the quick access cards section to properly separate each card and ensure correct navigation
+        Replace the existing navCardsContainer section with this improved version: */}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Access</Text>
           <View style={styles.navCardsContainer}>
@@ -534,11 +546,7 @@ export default function Home() {
               <TouchableOpacity
                 activeOpacity={0.9}
                 style={{ flex: 1 }}
-                onPress={() => {
-                  handleCardPress().then(() => {
-                    router.push("/(tabs)/metrics");
-                  });
-                }}
+                onPress={() => handleCardPress("/fitness")}
               >
                 <LinearGradient colors={gradients.fitness} style={{ flex: 1 }}>
                   <View style={styles.navCardContent}>
@@ -565,7 +573,7 @@ export default function Home() {
               <TouchableOpacity
                 activeOpacity={0.9}
                 style={{ flex: 1 }}
-                onPress={() => handleCardPress("/(tabs)/chatbot")}
+                onPress={() => handleCardPress("/chat")}
               >
                 <LinearGradient colors={gradients.chat} style={{ flex: 1 }}>
                   <View style={styles.navCardContent}>
@@ -592,7 +600,7 @@ export default function Home() {
               <TouchableOpacity
                 activeOpacity={0.9}
                 style={{ flex: 1 }}
-                onPress={() => handleCardPress("/(tabs)/diet")}
+                onPress={() => handleCardPress("/diet")}
               >
                 <LinearGradient colors={gradients.diet} style={{ flex: 1 }}>
                   <View style={styles.navCardContent}>
@@ -619,18 +627,18 @@ export default function Home() {
               <TouchableOpacity
                 activeOpacity={0.9}
                 style={{ flex: 1 }}
-                onPress={() => handleCardPress("/(tabs)/profile")}
+                onPress={() => handleCardPress("/reports")}
               >
                 <LinearGradient colors={gradients.profile} style={{ flex: 1 }}>
                   <View style={styles.navCardContent}>
                     <View>
-                      <Text style={styles.navCardTitle}>My Profile</Text>
+                      <Text style={styles.navCardTitle}>Health Reports</Text>
                       <Text style={styles.navCardSubtitle}>
-                        View your stats
+                        View your progress
                       </Text>
                     </View>
                     <Ionicons
-                      name="person"
+                      name="document-text"
                       size={28}
                       color="white"
                       style={styles.navCardIcon}
@@ -685,7 +693,7 @@ export default function Home() {
             <View style={styles.promptSuggestions}>
               <TouchableOpacity
                 style={styles.promptChip}
-                onPress={() => router.push("/(tabs)/chatbot")}
+                onPress={() => router.push("/chat")}
               >
                 <Ionicons
                   name="body-outline"
@@ -698,7 +706,7 @@ export default function Home() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.promptChip}
-                onPress={() => router.push("/(tabs)/chatbot")}
+                onPress={() => router.push("/chat")}
               >
                 <Ionicons
                   name="nutrition-outline"
@@ -712,7 +720,7 @@ export default function Home() {
             </View>
             <TouchableOpacity
               style={styles.chatButton}
-              onPress={() => router.push("/(tabs)/chatbot")}
+              onPress={() => router.push("/chat")}
             >
               <Text style={styles.chatButtonText}>Chat Now</Text>
             </TouchableOpacity>
@@ -759,7 +767,7 @@ export default function Home() {
           {notifications.length > 2 && (
             <TouchableOpacity
               style={styles.viewAllButton}
-              onPress={() => router.push("/components/notifications")}
+              onPress={() => router.push("/notifications")}
             >
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>

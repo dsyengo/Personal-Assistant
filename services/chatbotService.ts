@@ -96,9 +96,7 @@ export const getChatLogs = async (): Promise<GetChatLogsResponse> => {
       },
     });
 
-    console.log("Response status:", response.status);
     const text = await response.text();
-    console.log("Response text:", text);
 
     if (!response.ok) {
       console.error("Error fetching chat logs:", text);
@@ -110,7 +108,6 @@ export const getChatLogs = async (): Promise<GetChatLogsResponse> => {
     }
 
     const parsedData = JSON.parse(text);
-    console.log("Chat logs data:", parsedData);
 
     const formattedLogs: Message[] = [];
 

@@ -21,7 +21,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 
 // API URL - replace with your actual API endpoint
-const API_URL = "https://your-api-url.com/api";
+const API_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 // Types
 type Workout = {
@@ -256,7 +256,7 @@ const FitnessScreen = () => {
 
     try {
       const response = await fetch(
-        `${API_URL}/fitness/summary/${userId}?period=weekly`
+        `${API_URL}/fitness/activity/summary/${userId}?period=weekly`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch activity summary");
